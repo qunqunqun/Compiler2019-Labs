@@ -33,6 +33,13 @@ syntax-c: $(YFILE)
 
 # 定义的一些伪目标
 .PHONY: clean test
+lexto:
+	flex lexical.l
+	gcc main.c lex.yy.c -lfl -o scanner
+
+testScanner:
+	./scanner ../Test/test0.cmm
+
 test:
 	./parser ../Test/test1.cmm
 clean:

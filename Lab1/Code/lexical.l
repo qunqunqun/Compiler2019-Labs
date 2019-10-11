@@ -1,9 +1,10 @@
-%option yylineno
-
 %{
 
 
 %}
+
+%option yylineno
+%x CONTENT 
 
 digit_8		[0-7]
 digit_10	[0-9]
@@ -51,6 +52,10 @@ RB          \]
 LC          \{
 RC          \}
 
+single		\/\/.*
+multiStart \/\*
+multiEnd	\*\/
+
 WrongOct 	0{digit_8}*[89]{digit_10}*
 WrongHex	0[Xx]{digit_16}*[g-zG-Z]{digit_16}*
 exphd		{Dec}|{float}
@@ -69,7 +74,7 @@ WrongFloat	([Ee][+-]?{exphd})|({exphd}[Ee][+-]?)|({exphd}[Ee][+-]?{float})
 
 {ID}			{ printf("Recognize ID : %s\n",yytext);}
 
-{ws}        	{ /* take no action */ }
+{ws}        	{}
 
 {SEMI}			{ printf("Recognize ; : %s \n",yytext); }
 {COMMA}			{ printf("Recognize , : %s \n",yytext); }
@@ -81,18 +86,41 @@ WrongFloat	([Ee][+-]?{exphd})|({exphd}[Ee][+-]?)|({exphd}[Ee][+-]?{float})
 {DIV}			{ printf("Recognize / : %s \n",yytext); }
 {AND}			{ printf("Recognize && : %s \n",yytext); }
 {OR}			{ printf("Recognize || : %s \n",yytext); }
-{DOT}			{ printf("Recognize \. : %s \n",yytext); }
-{NOT}			{ printf("Recognize !  : %s \n",yytext); }
-{LP}        		{ printf("Recognize \( : %s \n",yytext); }
-{RP}        		{ printf("Recognize \) : %s \n",yytext); }
-{LB}        		{ printf("Recognize \[ : %s \n",yytext); }
-{RB}        		{ printf("Recognize \] : %s \n",yytext); }
-{LC}        		{ printf("Recognize \{ : %s \n",yytext); }
-{RC}        		{ printf("Recognize \} : %s \n",yytext); }
+{DOT}			{ printf("Recognize . : %s \n",yytext); }
+
+
+{LP}        	{ printf("Recognize %s \n",yytext); }
+{RP}        	{ printf("Recognize %s \n",yytext); }
+{LB}        	{ printf("Recognize %s \n",yytext); }
+{RB}        	{ printf("Recognize %s \n",yytext); }
+{LC}        	{ printf("Recognize %s \n",yytext); }
+{RC}        	{ printf("Recognize %s \n",yytext); }
 
 {WrongOct}		{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Octal \'%s\'\n", yylineno, yytext); }
 {WrongHex}		{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Hexadecimal \'%s\'\n", yylineno, yytext); }
-{WrongFloat}		{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Float \'%s\'\n", yylineno, yytext); }
-.           		{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Myterious characters \'%s\'\n", yylineno, yytext); }
+{WrongFloat}	{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Float \'%s\'\n", yylineno, yytext); }
+.           	{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Myterious characters \'%s\'\n", yylineno, yytext); }
+
+{single} {
+	char c = input();
+	while (c != '\n') c = input();
+}
+
+{multiStart} { BEGIN CONTENT; }
+<CONTENT>[^*\n]* {}
+<CONTENT>"*"+[^*/\n]* {}
+<*>\n {}
+<CONTENT>"*/" { BEGIN INITIAL;}
+<CONTENT><<EOF>> {
+	printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: EOF \'\'\n", yylineno);
+	BEGIN INITIAL;
+}
+
+{multiEnd} {
+	printf("Error type \033[31mB\033[0m at Line \033[31m%d\033[0m: Syntax error \'\'\n", yylineno);
+}
+
+
 %%
+
 
