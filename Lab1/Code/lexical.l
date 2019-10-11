@@ -1,6 +1,7 @@
 %{
-
-
+	#include <string.h>
+	#include "syntax.tab.h"
+	#include "common.h"
 %}
 
 %option yylineno
@@ -62,39 +63,39 @@ exphd		{Dec}|{float}
 WrongFloat	([Ee][+-]?{exphd})|({exphd}[Ee][+-]?)|({exphd}[Ee][+-]?{float})
 
 %%
-{INT} 			{ printf("Recognize Interger : %s\n",yytext); }
-{FLOAT} 		{ printf("Recognize FLOAT : %s\n",yytext); }
+{INT} 			{ printf("Recognize Interger : %s\n",yytext); return INT; }
+{FLOAT} 		{ printf("Recognize FLOAT : %s\n",yytext); return FLOAT; }
 
 
-{STRUCT}		{ printf("Recognize STRUCT : %s\n",yytext); }
-{RETURN}		{ printf("Recognize RETURN : %s\n",yytext); }
-{IF}			{ printf("Recognize IF : %s\n",yytext); }
-{ELSE} 			{ printf("Recognize ELSE : %s\n",yytext); }
-{WHILE}			{ printf("Recognize WHILE : %s\n",yytext); }
+{STRUCT}		{ printf("Recognize STRUCT : %s\n",yytext); return STRUCT; }
+{RETURN}		{ printf("Recognize RETURN : %s\n",yytext); return RETURN; }
+{IF}			{ printf("Recognize IF : %s\n",yytext); return IF; }
+{ELSE} 			{ printf("Recognize ELSE : %s\n",yytext); return ELSE;}
+{WHILE}			{ printf("Recognize WHILE : %s\n",yytext); return WHILE; }
 
-{ID}			{ printf("Recognize ID : %s\n",yytext);}
+{ID}			{ printf("Recognize ID : %s\n",yytext); return ID;}
 
 {ws}        	{}
 
-{SEMI}			{ printf("Recognize ; : %s \n",yytext); }
-{COMMA}			{ printf("Recognize , : %s \n",yytext); }
-{ASSIGNOP}		{ printf("Recognize = : %s \n",yytext); }
-{RELOP}			{ printf("Recognize RELOP:%s\n",yytext); }
-{PLUS}			{ printf("Recognize + : %s \n",yytext); }
-{MINUS}			{ printf("Recognize - : %s \n",yytext); }
-{STAR}			{ printf("Recognize * : %s \n",yytext); }
-{DIV}			{ printf("Recognize / : %s \n",yytext); }
-{AND}			{ printf("Recognize && : %s \n",yytext); }
-{OR}			{ printf("Recognize || : %s \n",yytext); }
-{DOT}			{ printf("Recognize . : %s \n",yytext); }
+{SEMI}			{ printf("Recognize ; : %s \n",yytext); return SEMI; }
+{COMMA}			{ printf("Recognize , : %s \n",yytext); return COMMA; }
+{ASSIGNOP}		{ printf("Recognize = : %s \n",yytext); return ASSIGNOP; }
+{RELOP}			{ printf("Recognize RELOP:%s\n",yytext); return RELOP; }
+{PLUS}			{ printf("Recognize + : %s \n",yytext); return PLUS; }
+{MINUS}			{ printf("Recognize - : %s \n",yytext); return MINUS; }
+{STAR}			{ printf("Recognize * : %s \n",yytext); return STAR; }
+{DIV}			{ printf("Recognize / : %s \n",yytext); return DIV;}
+{AND}			{ printf("Recognize && : %s \n",yytext); return AND;}
+{OR}			{ printf("Recognize || : %s \n",yytext); return OR;}
+{DOT}			{ printf("Recognize . : %s \n",yytext); return DOT;}
 
 
-{LP}        	{ printf("Recognize %s \n",yytext); }
-{RP}        	{ printf("Recognize %s \n",yytext); }
-{LB}        	{ printf("Recognize %s \n",yytext); }
-{RB}        	{ printf("Recognize %s \n",yytext); }
-{LC}        	{ printf("Recognize %s \n",yytext); }
-{RC}        	{ printf("Recognize %s \n",yytext); }
+{LP}        	{ printf("Recognize %s \n",yytext); return LP; }
+{RP}        	{ printf("Recognize %s \n",yytext); return RP; }
+{LB}        	{ printf("Recognize %s \n",yytext); return LB; }
+{RB}        	{ printf("Recognize %s \n",yytext); return RB; }
+{LC}        	{ printf("Recognize %s \n",yytext); return LC; }
+{RC}        	{ printf("Recognize %s \n",yytext); return RC; }
 
 {WrongOct}		{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Octal \'%s\'\n", yylineno, yytext); }
 {WrongHex}		{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Hexadecimal \'%s\'\n", yylineno, yytext); }

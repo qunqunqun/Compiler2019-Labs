@@ -1,6 +1,6 @@
 %{
 
-#include "ast.h"
+#include "GramTree.h"
 #include "common.h"
 #include "lex.yy.c"
 
@@ -15,20 +15,31 @@ extern int yylineno;
 
 /* Tokens */
 %token <node_type> INT FLOAT ID
-%token <node_type> ID SEMI COMMA ASSIGNOP RELOP
+%token <node_type> SEMI COMMA ASSIGNOP RELOP
 %token <node_type> PLUS MINUS STAR DIV AND OR NOT
 %token <node_type> DOT TYPE LP RP LB RB LC RC 
 %token <node_type> STRUCT RETURN IF ELSE WHILE error
-
+/* 上面的error哪来的 */
 
 %type <node_type> Program ExtDefList ExtDef ExtDecList      /* High-level Definitions*/
-%type <node_type> Specifiers StructSpecifiers OptTag Tag    /* Specifiers */
-%type <node_type> VarDec FunDec VarlList ParamDec           /* Declarators */
+%type <node_type> Specifier StructSpecifier OptTag Tag    /* Specifiers */
+%type <node_type> VarDec FunDec VarList ParamDec           /* Declarators */
 %type <type_ast> CompSt StmtList Stmt                       /* Statements */
 %type <type_ast> DefList Def DecList Dec                    /* Loacal Definitions */
 %type <type_ast> Exp Args                                   /* Expressions */
 
 //TODO: give rules of priority
+%right ASSIGNOP
+%left OR
+%left AND
+%left RELOP
+%left PLUS MINUS
+%left STAR DIV
+%right NOT
+%left LP RP LB RB DOT
+
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 %%
 
@@ -40,9 +51,9 @@ ExtDefList: ExtDef ExtDefList       {}
     | /*empty*/                     {}
     ;
 
-ExtDef: Specifiers ExtDecList SEMI  {}
-    | Specifiers SEMI               {}
-    | Specifiers FunDec CompSt      {}
+ExtDef: Specifier ExtDecList SEMI  {}
+    | Specifier SEMI               {}
+    | Specifier FunDec CompSt      {}
     ;
 
 ExtDecList: VarDec                  {}

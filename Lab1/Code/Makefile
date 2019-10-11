@@ -40,6 +40,12 @@ lexto:
 testScanner:
 	./scanner ../Test/test0.cmm
 
+bisonto:
+	flex lexical.l
+	bison -d syntax.y
+	gcc syntax.tab.c GramTree.c main.c -lfl -ly -o parser
+
+
 test:
 	./parser ../Test/test1.cmm
 clean:
