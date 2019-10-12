@@ -1,4 +1,6 @@
 #include<stdio.h>
+#include "common.h"
+#include "GramTree.h"
 
 extern FILE* yyin;
 extern int yylex();
@@ -16,8 +18,12 @@ int main(int argc, char ** argv){
 	}
 	//start parse
 	yyrestart(f);
-	yylex(); //using yyparse rather than yylex()
+	// yylex(); //using yyparse rather than yylex()
+	yyparse();
 	fclose(f);
+	
+	printf("--------------Grammar Tree--------------\n");
+	printGramTree(treeRoot,0);
 	
 	return 0;
 }

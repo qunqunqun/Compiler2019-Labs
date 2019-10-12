@@ -53,7 +53,7 @@ RB          \]
 LC          \{
 RC          \}
 
-single		\/\/.*
+single		\/\/
 multiStart \/\*
 multiEnd	\*\/
 
@@ -63,39 +63,74 @@ exphd		{Dec}|{float}
 WrongFloat	([Ee][+-]?{exphd})|({exphd}[Ee][+-]?)|({exphd}[Ee][+-]?{float})
 
 %%
-{INT} 			{ printf("Recognize Interger : %s\n",yytext); return INT; }
-{FLOAT} 		{ printf("Recognize FLOAT : %s\n",yytext); return FLOAT; }
+{INT} 			{ 
+	printf("Match Interger : %s\n",yytext);
+	yylval.node_type = newTreeNode("INT",0,yylineno);
+	GramTree* node = yylval.node_type;
+	// val.a is int type
+	if(yytext[1] == 'x' || yytext[1] == 'X'){
+		sscanf(yytext, "%x", &node->val.a);		
+	}else{
+		node->val.a = atoi(yytext);
+	}
+
+	return INT; 
+}
+
+{FLOAT} 		{ 
+	printf("Match FLOAT : %s\n",yytext); 
+	yylval.node_type = newTreeNode("FLOAT",0,yylineno);
+	GramTree* node = yylval.node_type;
+	node->val.b = atof(yytext);
+	return FLOAT; 
+}
 
 
-{STRUCT}		{ printf("Recognize STRUCT : %s\n",yytext); return STRUCT; }
-{RETURN}		{ printf("Recognize RETURN : %s\n",yytext); return RETURN; }
-{IF}			{ printf("Recognize IF : %s\n",yytext); return IF; }
-{ELSE} 			{ printf("Recognize ELSE : %s\n",yytext); return ELSE;}
-{WHILE}			{ printf("Recognize WHILE : %s\n",yytext); return WHILE; }
+{TYPE}      { 
+	printf("Match TYPE : %s\n",yytext);
+	yylval.node_type = newTreeNode("TYPE",0,yylineno);
+	GramTree* node = yylval.node_type;
+	strcpy(node->val.str, yytext);
+	return TYPE;
+}
 
-{ID}			{ printf("Recognize ID : %s\n",yytext); return ID;}
+{STRUCT}		{ printf("Match STRUCT : %s\n",yytext); yylval.node_type = newTreeNode("STRUCT",0,yylineno);	return STRUCT; }
+{RETURN}		{ printf("Match RETURN : %s\n",yytext); yylval.node_type = newTreeNode("RETURN",0,yylineno);	return RETURN; }
+{IF}			{ printf("Match IF : %s\n",yytext); 	yylval.node_type = newTreeNode("IF",0,yylineno);	return IF; }
+{ELSE} 			{ printf("Match ELSE : %s\n",yytext); 	yylval.node_type = newTreeNode("ELSE",0,yylineno);	return ELSE;}
+{WHILE}			{ printf("Match WHILE : %s\n",yytext); 	yylval.node_type = newTreeNode("WHILE",0,yylineno);	return WHILE; }
+
+
+{ID}      { 
+	printf("Match ID : %s\n",yytext);
+	yylval.node_type = newTreeNode("ID",0,yylineno);
+	GramTree* node = yylval.node_type;
+	strcpy(node->val.str, yytext);
+	return ID;
+}
+
 
 {ws}        	{}
 
-{SEMI}			{ printf("Recognize ; : %s \n",yytext); return SEMI; }
-{COMMA}			{ printf("Recognize , : %s \n",yytext); return COMMA; }
-{ASSIGNOP}		{ printf("Recognize = : %s \n",yytext); return ASSIGNOP; }
-{RELOP}			{ printf("Recognize RELOP:%s\n",yytext); return RELOP; }
-{PLUS}			{ printf("Recognize + : %s \n",yytext); return PLUS; }
-{MINUS}			{ printf("Recognize - : %s \n",yytext); return MINUS; }
-{STAR}			{ printf("Recognize * : %s \n",yytext); return STAR; }
-{DIV}			{ printf("Recognize / : %s \n",yytext); return DIV;}
-{AND}			{ printf("Recognize && : %s \n",yytext); return AND;}
-{OR}			{ printf("Recognize || : %s \n",yytext); return OR;}
-{DOT}			{ printf("Recognize . : %s \n",yytext); return DOT;}
+{SEMI}			{ printf("Match ; : %s \n",yytext); yylval.node_type = newTreeNode("SEMI",0,yylineno);	return SEMI; }
+{COMMA}			{ printf("Match , : %s \n",yytext); yylval.node_type = newTreeNode("COMMA",0,yylineno);	return COMMA; }
+{ASSIGNOP}		{ printf("Match = : %s \n",yytext); yylval.node_type = newTreeNode("ASSIGNOP",0,yylineno);	return ASSIGNOP; }
+{RELOP}			{ printf("Match RELOP:%s\n",yytext); yylval.node_type = newTreeNode("RELOP",0,yylineno);	return RELOP; }
+{PLUS}			{ printf("Match + : %s \n",yytext); yylval.node_type = newTreeNode("PLUS",0,yylineno);	return PLUS; }
+{MINUS}			{ printf("Match - : %s \n",yytext); yylval.node_type = newTreeNode("MINUS",0,yylineno);	return MINUS; }
+{STAR}			{ printf("Match * : %s \n",yytext); yylval.node_type = newTreeNode("STAR",0,yylineno);	return STAR; }
+{DIV}			{ printf("Match / : %s \n",yytext); yylval.node_type = newTreeNode("DIV",0,yylineno);	return DIV;}
+{AND}			{ printf("Match && : %s \n",yytext); yylval.node_type = newTreeNode("AND",0,yylineno);	return AND;}
+{OR}			{ printf("Match || : %s \n",yytext); yylval.node_type = newTreeNode("OR",0,yylineno);	return OR;}
+{DOT}			{ printf("Match . : %s \n",yytext); yylval.node_type = newTreeNode("DOT",0,yylineno);	return DOT;}
 
 
-{LP}        	{ printf("Recognize %s \n",yytext); return LP; }
-{RP}        	{ printf("Recognize %s \n",yytext); return RP; }
-{LB}        	{ printf("Recognize %s \n",yytext); return LB; }
-{RB}        	{ printf("Recognize %s \n",yytext); return RB; }
-{LC}        	{ printf("Recognize %s \n",yytext); return LC; }
-{RC}        	{ printf("Recognize %s \n",yytext); return RC; }
+{LP}        	{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("LP",0,yylineno);	return LP; }
+{RP}        	{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("RP",0,yylineno);	return RP; }
+{LB}        	{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("LB",0,yylineno);	return LB; }
+{RB}        	{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("RB",0,yylineno);	return RB; }
+{LC}        	{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("LC",0,yylineno);	return LC; }
+{RC}        	{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("RC",0,yylineno);	return RC; }
 
 {WrongOct}		{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Octal \'%s\'\n", yylineno, yytext); }
 {WrongHex}		{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Hexadecimal \'%s\'\n", yylineno, yytext); }

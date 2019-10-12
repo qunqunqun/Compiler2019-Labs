@@ -1,5 +1,19 @@
 #include"GramTree.h"
 
+
+void printTreeNode(GramTree* node){
+    printf("lineNo = %d, nChild = %d\n", node->lineNo, node->nChild);
+    printf("tag = %s\n",node->tag);
+    if(strcmp(node->tag,"FLOAT") == 0){
+        printf("value:%f\n",node->val.b);
+    }else if(strcmp(node->tag,"INT") == 0){
+        printf("value:%d\n",node->val.a);
+    }else{
+        printf("value:%s\n",node->val.str);
+    }
+
+}
+
 void printBlank(int blank){
     int i = 0;
     for(; i<2*blank;i++){
@@ -15,12 +29,14 @@ void initTreeNode(GramTree* node){
     node->nChild = 0;
 }
 
-GramTree *newTreeNode(enum TagOfNode tag,int n, ...){
+GramTree *newTreeNode(char* tag,int n, ...){
     va_list valist;         
     va_start(valist, n);
 
     GramTree *root = (GramTree*)malloc(sizeof(GramTree));   //new node
-    root->tag = tag;
+    // root->tag = tag;
+    strcpy(root->tag, tag);
+
     initTreeNode(root);
 
     if(n == 0){
@@ -30,7 +46,7 @@ GramTree *newTreeNode(enum TagOfNode tag,int n, ...){
     }else{
         int i = 0;
         for(; i<n; i++){
-            root->child[i] = va_arg(valist, struct ast*);
+            root->child[i] = va_arg(valist, GramTree*);
         }
         root->lineNo = root->child[0]->lineNo;
         root->nChild = n;
@@ -45,29 +61,44 @@ GramTree *newTreeNode(enum TagOfNode tag,int n, ...){
 // No indet now
 void printGramTree(GramTree* node, int blank){
 
+
+    printBlank(blank);
+
     if( node == NULL){
+        printf("Printing GramTree, node == NULL\n");
         return;
     }
 
     if(node->nChild != 0){
-        printf("%d %s\n",node->lineNo,node->val.str);
+        printf("%s (%d)\n",node->tag,node->lineNo);
         int i = 0;
         for(; i < node->nChild;i++){
+            if( strcmp(node->tag, "EMPTY") == 0){
+                continue;
+            }
             printGramTree(node->child[i], blank+1);
         }
     }else{
-        if (node->tag == TAG_ID || node->tag == TAG_TYPE){
-            printf(": %s\n", node->val.str);
+        // if(strcmp(node->tag,"EMPTY") != 0){
+        //     printf("%s",node->tag);
+        // }
+        printf("%s",node->tag);
+
+        if (strcmp(node->tag,"ID") == 0 || strcmp(node->tag,"TYPE") == 0){
+            printf(": %s", node->val.str);
         }
-        else if (node->tag == TAG_INT){
-            printf(": %d\n", node->val.a);
+        else if (strcmp(node->tag,"INT") == 0){
+            printf(": %d", node->val.a);
         }
-        else if (node->tag == TAG_FLOAT){
-            printf(": %f\n", node->val.b);
+        else if (strcmp(node->tag,"FLOAT") == 0){
+            // printTreeNode(node);
+            printf(": %f", node->val.b);
         }
-        else{
-            assert(0);
-        }
+
+        printf("\n");
+        // if(strcmp(node->tag,"EMPTY") != 0){
+        //     printf("\n");
+        // }
     }
 
 
