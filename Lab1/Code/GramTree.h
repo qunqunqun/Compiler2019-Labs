@@ -43,7 +43,7 @@ typedef struct TreeNode
 	char tag[32];          
     union { //value
         int a;
-        float b;
+        float b; // if using exp, precision of float may lost while using ATOF //TODO 
         char str[32];
     } val;
 

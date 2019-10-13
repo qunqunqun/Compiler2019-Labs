@@ -23,7 +23,10 @@ int main(int argc, char ** argv){
 	// yylex(); //using yyparse rather than yylex()
 	yyparse();
 	fclose(f);
-	printf("--------------Grammar Tree--------------\n");
-	printGramTree(treeRoot,0);
+	if( ErrorFlag == 0){
+		printf("--------------Grammar Tree--------------\n");
+		printGramTree(treeRoot,0);
+	}
+
 	return 0;
 }

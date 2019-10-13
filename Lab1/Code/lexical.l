@@ -127,6 +127,7 @@ multiEnd	\*\/
 {AND}			{ debug(yytext); yylval.node_type = newTreeNode("AND",0,yylineno);	return AND;}
 {OR}			{ debug(yytext); yylval.node_type = newTreeNode("OR",0,yylineno);	return OR;}
 {DOT}			{ debug(yytext); yylval.node_type = newTreeNode("DOT",0,yylineno);	return DOT;}
+{NOT}			{ debug(yytext); yylval.node_type = newTreeNode("NOT",0,yylineno);	return NOT;}
 
 
 {LP}        	{ debug(yytext); yylval.node_type = newTreeNode("LP",0,yylineno);	return LP; }
@@ -149,12 +150,14 @@ s
 <*>\n {}
 <CONTENT>"*/" { BEGIN INITIAL;}
 <CONTENT><<EOF>> {
+	ErrorFlag = 1;
 	printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: EOF \'\'\n", yylineno);
 	BEGIN INITIAL;
 }
 
 {multiEnd} {
-	printf("Error type \033[31mB\033[0m at Line \033[31m%d\033[0m: Syntax error \'\'\n", yylineno);
+	ErrorFlag = 1;
+	printf("Error type \033[31mB\033[0m at Line \033[31m%d\033[0m: Syntax error \' multi annotation \*\/ \'\n", yylineno);
 }
 
 
