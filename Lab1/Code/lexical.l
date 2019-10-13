@@ -144,11 +144,11 @@ s
 	while (c != '\n') c = input();
 }
 
-{multiStart} { BEGIN CONTENT; }
-<CONTENT>[^*\n]* {}
-<CONTENT>"*"+[^*/\n]* {}
-<*>\n {}
-<CONTENT>"*/" { BEGIN INITIAL;}
+{multiStart} {  BEGIN CONTENT; }
+<CONTENT>[^*\n]* {  }
+<CONTENT>"*"+[^*/\n]* { }
+<CONTENT>\n {   }
+<CONTENT>"*"+"/" {  BEGIN INITIAL;}
 <CONTENT><<EOF>> {
 	ErrorFlag = 1;
 	printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: EOF \'\'\n", yylineno);
