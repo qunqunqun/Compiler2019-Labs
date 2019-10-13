@@ -1,7 +1,7 @@
 %{
 
-#include "GramTree.h"
 #include "common.h"
+#include "GramTree.h"
 #include "lex.yy.c"
 
 extern int yylex();
@@ -112,10 +112,10 @@ DefList: Def DefList                            { $$ = newTreeNode("DefList", 2,
     | /* empty */                               { $$ = newTreeNode("EMPTY", 0);}
     ;
 
-Def: Specifier DecList SEMI                     { $$ = newTreeNode("DefList", 3, $1, $2, $3);}
-    | Specifier error SEMI                      { $$ = newTreeNode("DefList", 3, $1, $2, $3);}
-    | Specifier DecList error                   { $$ = newTreeNode("DefList", 3, $1, $2, $3);}
-    | Specifier Dec error                       { $$ = newTreeNode("DefList", 3, $1, $2, $3);}
+Def: Specifier DecList SEMI                     { $$ = newTreeNode("Def", 3, $1, $2, $3);}
+    | Specifier error SEMI                      { $$ = newTreeNode("Def", 3, $1, $2, $3); ErrorFlag = 1;}
+    | Specifier DecList error                   { $$ = newTreeNode("Def", 3, $1, $2, $3); ErrorFlag = 1;}
+    | Specifier Dec error                       { $$ = newTreeNode("Def", 3, $1, $2, $3); ErrorFlag = 1;}
     ;
 
 DecList: Dec                                    { $$ = newTreeNode("DecList", 1, $1);}
@@ -145,8 +145,8 @@ Exp:  Exp ASSIGNOP Exp                          { $$ = newTreeNode("Exp", 3, $1,
     | ID                                        { $$ = newTreeNode("Exp", 1, $1);}
     | INT                                       { $$ = newTreeNode("Exp", 1, $1);}
     | FLOAT                                     { $$ = newTreeNode("Exp", 1, $1);}
-    | ID LP error RP                            { $$ = newTreeNode("Exp", 4, $1, $2, $3, $4);}
-    | Exp LB error RB                           { $$ = newTreeNode("Exp", 4, $1, $2, $3, $4); }
+    | ID LP error RP                            { $$ = newTreeNode("Exp", 4, $1, $2, $3, $4); ErrorFlag = 1;}
+    | Exp LB error RB                           { $$ = newTreeNode("Exp", 4, $1, $2, $3, $4); ErrorFlag = 1;}
     ;
 
 Args: Exp COMMA Args                            { $$ = newTreeNode("Args", 3, $1, $2, $3);}
@@ -157,6 +157,5 @@ Args: Exp COMMA Args                            { $$ = newTreeNode("Args", 3, $1
 %%
 
 void yyerror(char *msg) {
-    // TODO: rewrite report error
     printf("error: %d ,%s\n", yylineno, msg);
 }

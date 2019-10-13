@@ -5,4 +5,6 @@
 #include <assert.h>
 #include <stdarg.h>
 
+int ErrorFlag;
+
 #define MAX_CHILD 127

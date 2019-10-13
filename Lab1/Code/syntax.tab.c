@@ -65,8 +65,8 @@
 #line 1 "syntax.y" /* yacc.c:339  */
 
 
-#include "GramTree.h"
 #include "common.h"
+#include "GramTree.h"
 #include "lex.yy.c"
 
 extern int yylex();
@@ -97,7 +97,7 @@ extern int yylineno;
 # define YY_YY_SYNTAX_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 0
+# define YYDEBUG 1
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -1529,25 +1529,25 @@ yyreduce:
 
   case 34:
 #line 115 "syntax.y" /* yacc.c:1646  */
-    { (yyval.node_type) = newTreeNode("DefList", 3, (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type));}
+    { (yyval.node_type) = newTreeNode("Def", 3, (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type));}
 #line 1534 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
 #line 116 "syntax.y" /* yacc.c:1646  */
-    { (yyval.node_type) = newTreeNode("DefList", 3, (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type));}
+    { (yyval.node_type) = newTreeNode("Def", 3, (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type)); ErrorFlag = 1;}
 #line 1540 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
 #line 117 "syntax.y" /* yacc.c:1646  */
-    { (yyval.node_type) = newTreeNode("DefList", 3, (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type));}
+    { (yyval.node_type) = newTreeNode("Def", 3, (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type)); ErrorFlag = 1;}
 #line 1546 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
 #line 118 "syntax.y" /* yacc.c:1646  */
-    { (yyval.node_type) = newTreeNode("DefList", 3, (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type));}
+    { (yyval.node_type) = newTreeNode("Def", 3, (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type)); ErrorFlag = 1;}
 #line 1552 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1685,13 +1685,13 @@ yyreduce:
 
   case 60:
 #line 148 "syntax.y" /* yacc.c:1646  */
-    { (yyval.node_type) = newTreeNode("Exp", 4, (yyvsp[-3].node_type), (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type));}
+    { (yyval.node_type) = newTreeNode("Exp", 4, (yyvsp[-3].node_type), (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type)); ErrorFlag = 1;}
 #line 1690 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
 #line 149 "syntax.y" /* yacc.c:1646  */
-    { (yyval.node_type) = newTreeNode("Exp", 4, (yyvsp[-3].node_type), (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type)); }
+    { (yyval.node_type) = newTreeNode("Exp", 4, (yyvsp[-3].node_type), (yyvsp[-2].node_type), (yyvsp[-1].node_type), (yyvsp[0].node_type)); ErrorFlag = 1;}
 #line 1696 "syntax.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1940,6 +1940,5 @@ yyreturn:
 
 
 void yyerror(char *msg) {
-    // TODO: rewrite report error
     printf("error: %d ,%s\n", yylineno, msg);
 }

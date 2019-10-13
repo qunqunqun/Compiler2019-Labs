@@ -1,6 +1,5 @@
 #include"GramTree.h"
 
-
 void printTreeNode(GramTree* node){
     printf("lineNo = %d, nChild = %d\n", node->lineNo, node->nChild);
     printf("tag = %s\n",node->tag);

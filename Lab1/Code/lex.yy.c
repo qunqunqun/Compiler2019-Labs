@@ -579,9 +579,20 @@ char *yytext;
 	#include <string.h>
 	#include "syntax.tab.h"
 	#include "common.h"
-#line 583 "lex.yy.c"
+
+	
+	//#define LEX_DEBUG
+	void debug(char *msg) {
+	#ifdef YY_DEBUG
+    	if(strcmp(msg, "annotation") == 0)
+        	printf("%d: annotation\n", yylineno);
+    	else
+        	printf("%d: %s: %s\n", yylineno, msg, yytext);
+	#endif
+}
+#line 594 "lex.yy.c"
  
-#line 585 "lex.yy.c"
+#line 596 "lex.yy.c"
 
 #define INITIAL 0
 #define CONTENT 1
@@ -799,9 +810,9 @@ YY_DECL
 		}
 
 	{
-#line 65 "lexical.l"
+#line 76 "lexical.l"
 
-#line 805 "lex.yy.c"
+#line 816 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -870,9 +881,9 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 66 "lexical.l"
+#line 77 "lexical.l"
 { 
-	printf("Match Interger : %s\n",yytext);
+	debug(yytext);
 	yylval.node_type = newTreeNode("INT",0,yylineno);
 	GramTree* node = yylval.node_type;
 	// val.a is int type
@@ -887,9 +898,9 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 80 "lexical.l"
+#line 91 "lexical.l"
 { 
-	printf("Match FLOAT : %s\n",yytext); 
+	debug(yytext);
 	yylval.node_type = newTreeNode("FLOAT",0,yylineno);
 	GramTree* node = yylval.node_type;
 	node->val.b = atof(yytext);
@@ -898,9 +909,9 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 89 "lexical.l"
+#line 100 "lexical.l"
 { 
-	printf("Match TYPE : %s\n",yytext);
+	debug(yytext);
 	yylval.node_type = newTreeNode("TYPE",0,yylineno);
 	GramTree* node = yylval.node_type;
 	strcpy(node->val.str, yytext);
@@ -909,34 +920,34 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 97 "lexical.l"
-{ printf("Match STRUCT : %s\n",yytext); yylval.node_type = newTreeNode("STRUCT",0,yylineno);	return STRUCT; }
+#line 108 "lexical.l"
+{ debug(yytext); 	yylval.node_type = newTreeNode("STRUCT",0,yylineno);	return STRUCT; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 98 "lexical.l"
-{ printf("Match RETURN : %s\n",yytext); yylval.node_type = newTreeNode("RETURN",0,yylineno);	return RETURN; }
+#line 109 "lexical.l"
+{ debug(yytext); 	yylval.node_type = newTreeNode("RETURN",0,yylineno);	return RETURN; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 99 "lexical.l"
-{ printf("Match IF : %s\n",yytext); 	yylval.node_type = newTreeNode("IF",0,yylineno);	return IF; }
+#line 110 "lexical.l"
+{ debug(yytext); 	yylval.node_type = newTreeNode("IF",0,yylineno);	return IF; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 100 "lexical.l"
-{ printf("Match ELSE : %s\n",yytext); 	yylval.node_type = newTreeNode("ELSE",0,yylineno);	return ELSE;}
+#line 111 "lexical.l"
+{ debug(yytext); 	yylval.node_type = newTreeNode("ELSE",0,yylineno);	return ELSE;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 101 "lexical.l"
-{ printf("Match WHILE : %s\n",yytext); 	yylval.node_type = newTreeNode("WHILE",0,yylineno);	return WHILE; }
+#line 112 "lexical.l"
+{ debug(yytext); 	yylval.node_type = newTreeNode("WHILE",0,yylineno);	return WHILE; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 104 "lexical.l"
+#line 115 "lexical.l"
 { 
-	printf("Match ID : %s\n",yytext);
+	debug(yytext);
 	yylval.node_type = newTreeNode("ID",0,yylineno);
 	GramTree* node = yylval.node_type;
 	strcpy(node->val.str, yytext);
@@ -946,117 +957,117 @@ YY_RULE_SETUP
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 113 "lexical.l"
+#line 124 "lexical.l"
 {}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 115 "lexical.l"
-{ printf("Match ; : %s \n",yytext); yylval.node_type = newTreeNode("SEMI",0,yylineno);	return SEMI; }
+#line 126 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("SEMI",0,yylineno);	return SEMI; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 116 "lexical.l"
-{ printf("Match , : %s \n",yytext); yylval.node_type = newTreeNode("COMMA",0,yylineno);	return COMMA; }
+#line 127 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("COMMA",0,yylineno);	return COMMA; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 117 "lexical.l"
-{ printf("Match = : %s \n",yytext); yylval.node_type = newTreeNode("ASSIGNOP",0,yylineno);	return ASSIGNOP; }
+#line 128 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("ASSIGNOP",0,yylineno);	return ASSIGNOP; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 118 "lexical.l"
-{ printf("Match RELOP:%s\n",yytext); yylval.node_type = newTreeNode("RELOP",0,yylineno);	return RELOP; }
+#line 129 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("RELOP",0,yylineno);	return RELOP; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 119 "lexical.l"
-{ printf("Match + : %s \n",yytext); yylval.node_type = newTreeNode("PLUS",0,yylineno);	return PLUS; }
+#line 130 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("PLUS",0,yylineno);	return PLUS; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 120 "lexical.l"
-{ printf("Match - : %s \n",yytext); yylval.node_type = newTreeNode("MINUS",0,yylineno);	return MINUS; }
+#line 131 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("MINUS",0,yylineno);	return MINUS; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 121 "lexical.l"
-{ printf("Match * : %s \n",yytext); yylval.node_type = newTreeNode("STAR",0,yylineno);	return STAR; }
+#line 132 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("STAR",0,yylineno);	return STAR; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 122 "lexical.l"
-{ printf("Match / : %s \n",yytext); yylval.node_type = newTreeNode("DIV",0,yylineno);	return DIV;}
+#line 133 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("DIV",0,yylineno);	return DIV;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 123 "lexical.l"
-{ printf("Match && : %s \n",yytext); yylval.node_type = newTreeNode("AND",0,yylineno);	return AND;}
+#line 134 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("AND",0,yylineno);	return AND;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 124 "lexical.l"
-{ printf("Match || : %s \n",yytext); yylval.node_type = newTreeNode("OR",0,yylineno);	return OR;}
+#line 135 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("OR",0,yylineno);	return OR;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 125 "lexical.l"
-{ printf("Match . : %s \n",yytext); yylval.node_type = newTreeNode("DOT",0,yylineno);	return DOT;}
+#line 136 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("DOT",0,yylineno);	return DOT;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 128 "lexical.l"
-{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("LP",0,yylineno);	return LP; }
+#line 139 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("LP",0,yylineno);	return LP; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 129 "lexical.l"
-{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("RP",0,yylineno);	return RP; }
+#line 140 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("RP",0,yylineno);	return RP; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 130 "lexical.l"
-{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("LB",0,yylineno);	return LB; }
+#line 141 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("LB",0,yylineno);	return LB; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 131 "lexical.l"
-{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("RB",0,yylineno);	return RB; }
+#line 142 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("RB",0,yylineno);	return RB; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 132 "lexical.l"
-{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("LC",0,yylineno);	return LC; }
+#line 143 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("LC",0,yylineno);	return LC; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 133 "lexical.l"
-{ printf("Match %s \n",yytext); yylval.node_type = newTreeNode("RC",0,yylineno);	return RC; }
+#line 144 "lexical.l"
+{ debug(yytext); yylval.node_type = newTreeNode("RC",0,yylineno);	return RC; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 135 "lexical.l"
-{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Octal \'%s\'\n", yylineno, yytext); }
+#line 146 "lexical.l"
+{ ErrorFlag = 1; printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Octal \'%s\'\n", yylineno, yytext); }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 136 "lexical.l"
-{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Hexadecimal \'%s\'\n", yylineno, yytext); }
+#line 147 "lexical.l"
+{ ErrorFlag = 1; printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Hexadecimal \'%s\'\n", yylineno, yytext); }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 137 "lexical.l"
-{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Float \'%s\'\n", yylineno, yytext); }
+#line 148 "lexical.l"
+{ ErrorFlag = 1; printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Float \'%s\'\n", yylineno, yytext); }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 138 "lexical.l"
-{ printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Myterious characters \'%s\'\n", yylineno, yytext); }
+#line 149 "lexical.l"
+{ ErrorFlag = 1; printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Myterious characters \'%s\'\n", yylineno, yytext); }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 140 "lexical.l"
+#line 151 "lexical.l"
 {
 	char c = input();
 	while (c != '\n') c = input();
@@ -1064,32 +1075,32 @@ YY_RULE_SETUP
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 145 "lexical.l"
+#line 156 "lexical.l"
 { BEGIN CONTENT; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 146 "lexical.l"
+#line 157 "lexical.l"
 {}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 147 "lexical.l"
+#line 158 "lexical.l"
 {}
 	YY_BREAK
 case 36:
 /* rule 36 can match eol */
 YY_RULE_SETUP
-#line 148 "lexical.l"
+#line 159 "lexical.l"
 {}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 149 "lexical.l"
+#line 160 "lexical.l"
 { BEGIN INITIAL;}
 	YY_BREAK
 case YY_STATE_EOF(CONTENT):
-#line 150 "lexical.l"
+#line 161 "lexical.l"
 {
 	printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: EOF \'\'\n", yylineno);
 	BEGIN INITIAL;
@@ -1097,17 +1108,17 @@ case YY_STATE_EOF(CONTENT):
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 155 "lexical.l"
+#line 166 "lexical.l"
 {
 	printf("Error type \033[31mB\033[0m at Line \033[31m%d\033[0m: Syntax error \'\'\n", yylineno);
 }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 160 "lexical.l"
+#line 171 "lexical.l"
 ECHO;
 	YY_BREAK
-#line 1111 "lex.yy.c"
+#line 1122 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2124,7 +2135,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 160 "lexical.l"
+#line 171 "lexical.l"
 
 
 

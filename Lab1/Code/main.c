@@ -7,6 +7,7 @@ extern int yylex();
 extern int yyparse();
 extern int yyrestart(FILE *);
 
+
 //version 1
 int main(int argc, char ** argv){
 
@@ -17,13 +18,14 @@ int main(int argc, char ** argv){
 		return 1;
 	}
 	//start parse
+	ErrorFlag = 0;
 	yyrestart(f);
 	// yylex(); //using yyparse rather than yylex()
 	yyparse();
 	fclose(f);
-	
 	printf("--------------Grammar Tree--------------\n");
-	printGramTree(treeRoot,0);
-	
+	if(ErrorFlag == 0) { //No Error
+		printGramTree(treeRoot,0);
+	}
 	return 0;
 }

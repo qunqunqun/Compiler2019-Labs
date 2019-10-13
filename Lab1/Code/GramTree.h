@@ -49,7 +49,6 @@ typedef struct TreeNode
 
     // GramTree *first_child;   //child
     // GramTree *slibing;       //neighbour
-
 	struct TreeNode *child[MAX_CHILD];
 
 }GramTree;

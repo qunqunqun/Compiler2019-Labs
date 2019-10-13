@@ -45,6 +45,11 @@ bisonto:
 	bison -d syntax.y
 	gcc syntax.tab.c GramTree.c main.c -lfl -ly -o parser
 
+debug:
+	flex lexical.l
+	bison -d -v -t syntax.y
+	gcc syntax.tab.c GramTree.c main.c -lfl -ly -o parser -D YY_DEBUG
+
 gramTest:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)
@@ -63,3 +68,4 @@ clean:
 	rm -f $(OBJS) $(OBJS:.o=.d)
 	rm -f $(LFC) $(YFC) $(YFC:.c=.h)
 	rm -f *~
+
