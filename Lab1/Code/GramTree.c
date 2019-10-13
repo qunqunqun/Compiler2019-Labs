@@ -60,22 +60,19 @@ GramTree *newTreeNode(char* tag,int n, ...){
 // No indet now
 void printGramTree(GramTree* node, int blank){
 
-
-    printBlank(blank);
-
     if( node == NULL){
         printf("Printing GramTree, node == NULL\n");
         return;
     }
-
+    if(strcmp(node->tag, "EMPTY") == 0){
+        return;
+    }
+    printBlank(blank);
     if(node->nChild != 0){
         printf("%s (%d)\n",node->tag,node->lineNo);
         int i = 0;
-        for(; i < node->nChild;i++){
-            if( strcmp(node->tag, "EMPTY") == 0){
-                continue;
-            }
-            printGramTree(node->child[i], blank+1);
+        for(; i < node->nChild; i++){
+            printGramTree(node->child[i], blank + 1);
         }
     }else{
         // if(strcmp(node->tag,"EMPTY") != 0){

@@ -24,8 +24,6 @@ int main(int argc, char ** argv){
 	yyparse();
 	fclose(f);
 	printf("--------------Grammar Tree--------------\n");
-	if(ErrorFlag == 1) { //No Error
-		printGramTree(treeRoot,0);
-	}
+	printGramTree(treeRoot,0);
 	return 0;
 }
