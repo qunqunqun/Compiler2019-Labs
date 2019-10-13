@@ -34,7 +34,7 @@
 # define YY_YY_SYNTAX_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 1
+# define YYDEBUG 0
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -81,11 +81,11 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 12 "syntax.y" /* yacc.c:1909  */
+#line 12 "./syntax.y" /* yacc.c:1909  */
 
     GramTree* node_type;
 
-#line 89 "syntax.tab.h" /* yacc.c:1909  */
+#line 89 "./syntax.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

@@ -21,15 +21,12 @@
 digit_8		[0-7]
 digit_10	[0-9]
 digit_16	[0-9A-Fa-f]
-Oct			0{digit_8}+
 Dec 		[1-9]{digit_10}*|0
-Hex 		0[Xx]{digit_16}+
 
 float 		[+-]?({digit_10}*[.]{digit_10}+|{digit_10}+[.])
-exp 		({float})[Ee][+-]?{digit_10}+
 
-INT			{Oct}|{Dec}|{Hex}
-FLOAT		{float}|{exp}
+INT			{Dec}
+FLOAT		{float}
 
 letter		[_A-Za-z]
 ID			{letter}({letter}|{digit_10})*
@@ -68,10 +65,6 @@ single		\/\/
 multiStart \/\*
 multiEnd	\*\/
 
-WrongOct 	0{digit_8}*[89]{digit_10}*
-WrongHex	0[Xx]{digit_16}*[g-zG-Z]{digit_16}*
-exphd		{Dec}|{float}
-WrongFloat	([Ee][+-]?{exphd})|({exphd}[Ee][+-]?)|({exphd}[Ee][+-]?{float})
 
 %%
 {INT} 			{ 
@@ -143,11 +136,8 @@ WrongFloat	([Ee][+-]?{exphd})|({exphd}[Ee][+-]?)|({exphd}[Ee][+-]?{float})
 {LC}        	{ debug(yytext); yylval.node_type = newTreeNode("LC",0,yylineno);	return LC; }
 {RC}        	{ debug(yytext); yylval.node_type = newTreeNode("RC",0,yylineno);	return RC; }
 
-{WrongOct}		{ ErrorFlag = 1; printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Octal \'%s\'\n", yylineno, yytext); }
-{WrongHex}		{ ErrorFlag = 1; printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Hexadecimal \'%s\'\n", yylineno, yytext); }
-{WrongFloat}	{ ErrorFlag = 1; printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Wrong Float \'%s\'\n", yylineno, yytext); }
 .           	{ ErrorFlag = 1; printf("Error type \033[31mA\033[0m at Line \033[31m%d\033[0m: Myterious characters \'%s\'\n", yylineno, yytext); }
-
+s
 {single} {
 	char c = input();
 	while (c != '\n') c = input();

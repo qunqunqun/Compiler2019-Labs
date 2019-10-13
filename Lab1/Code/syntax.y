@@ -79,6 +79,7 @@ Tag: ID                                         { $$ = newTreeNode("TAG", 1, $1 
 /* Declarators */
 VarDec: ID                                      { $$ = newTreeNode("VarDec", 1, $1 );}
     | VarDec LB INT RB                          { $$ = newTreeNode("VarDec", 4, $1, $2, $3, $4);}
+    | VarDec LB error RB                        { $$ = newTreeNode("VarDec", 4, $1, $2, $3, $4); ErrorFlag = 1; /*errorTypeB("Syntax error");*/}
     ;
 
 FunDec: ID LP VarList RP                        { $$ = newTreeNode("FunDec", 4, $1, $2, $3, $4);}
@@ -94,6 +95,7 @@ ParamDec: Specifier VarDec                      { $$ = newTreeNode("ParamDec", 2
 
 /* Statements */
 CompSt: LC DefList StmtList RC                  { $$ = newTreeNode("CompSt", 4, $1, $2, $3, $4);}
+    | error RC                                  { $$ = newTreeNode("CompSt", 2, $1, $2); ErrorFlag = 1; /*errorTypeB("Syntax error");*/}
     ;
 
 StmtList: Stmt StmtList                         { $$ = newTreeNode("StmtList", 2, $1, $2);}
@@ -105,6 +107,7 @@ Stmt: Exp SEMI                                  { $$ = newTreeNode("Stmt", 2, $1
     | RETURN Exp SEMI                           { $$ = newTreeNode("Stmt", 3, $1, $2, $3);}
     | IF LP Exp RP Stmt                         { $$ = newTreeNode("Stmt", 4, $1, $2, $3, $4  );}
     | IF LP Exp RP Stmt ELSE Stmt               { $$ = newTreeNode("Stmt", 5, $1, $2, $3, $4, $5);}
+    | error SEMI                                { $$ = newTreeNode("Stmt", 2, $1, $2);  ErrorFlag = 1; /*errorTypeB("Syntax error");*/} 
     ;
 
 /* Local Definitions */
@@ -113,9 +116,9 @@ DefList: Def DefList                            { $$ = newTreeNode("DefList", 2,
     ;
 
 Def: Specifier DecList SEMI                     { $$ = newTreeNode("Def", 3, $1, $2, $3);}
-    | Specifier error SEMI                      { $$ = newTreeNode("Def", 3, $1, $2, $3); ErrorFlag = 1;}
-    | Specifier DecList error                   { $$ = newTreeNode("Def", 3, $1, $2, $3); ErrorFlag = 1;}
-    | Specifier Dec error                       { $$ = newTreeNode("Def", 3, $1, $2, $3); ErrorFlag = 1;}
+    | Specifier error SEMI                      { $$ = newTreeNode("Def", 3, $1, $2, $3); ErrorFlag = 1; /*errorTypeB("Syntax error");*/}
+    | Specifier DecList error                   { $$ = newTreeNode("Def", 3, $1, $2, $3); ErrorFlag = 1; /*errorTypeB("Syntax error");*/}
+    | Specifier Dec error                       { $$ = newTreeNode("Def", 3, $1, $2, $3); ErrorFlag = 1; /*errorTypeB("Syntax error");*/}
     ;
 
 DecList: Dec                                    { $$ = newTreeNode("DecList", 1, $1);}
@@ -145,8 +148,9 @@ Exp:  Exp ASSIGNOP Exp                          { $$ = newTreeNode("Exp", 3, $1,
     | ID                                        { $$ = newTreeNode("Exp", 1, $1);}
     | INT                                       { $$ = newTreeNode("Exp", 1, $1);}
     | FLOAT                                     { $$ = newTreeNode("Exp", 1, $1);}
-    | ID LP error RP                            { $$ = newTreeNode("Exp", 4, $1, $2, $3, $4); ErrorFlag = 1;}
-    | Exp LB error RB                           { $$ = newTreeNode("Exp", 4, $1, $2, $3, $4); ErrorFlag = 1;}
+    | ID LP error RP                            { $$ = newTreeNode("Exp", 4, $1, $2, $3, $4); ErrorFlag = 1; /*errorTypeB("Syntax error");*/}
+    | Exp LB error RB                           { $$ = newTreeNode("Exp", 4, $1, $2, $3, $4); ErrorFlag = 1; /*errorTypeB("Missing \"[\"");*/}
+    | error RP                                  { $$ = newTreeNode("Exp", 2, $1, $2); ErrorFlag = 1; /*errorTypeB("Syntax error");*/}
     ;
 
 Args: Exp COMMA Args                            { $$ = newTreeNode("Args", 3, $1, $2, $3);}
@@ -157,5 +161,9 @@ Args: Exp COMMA Args                            { $$ = newTreeNode("Args", 3, $1
 %%
 
 void yyerror(char *msg) {
-    printf("error: %d ,%s\n", yylineno, msg);
+    errorTypeB(msg);
+}
+
+void errorTypeB(char * msg) {
+    printf("Error type \033[31mB\033[0m at Line \033[31m%d\033[0m: %s\n", yylineno, msg);
 }
