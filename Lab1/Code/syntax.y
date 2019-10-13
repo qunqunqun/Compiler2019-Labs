@@ -54,6 +54,8 @@ ExtDefList: ExtDef ExtDefList       { $$ = newTreeNode("ExtDefList", 2, $1, $2);
 ExtDef: Specifier ExtDecList SEMI  { $$ = newTreeNode("ExtDef", 3, $1, $2, $3); }
     | Specifier SEMI               { $$ = newTreeNode("ExtDef", 2, $1, $2);}
     | Specifier FunDec CompSt      { $$ = newTreeNode("ExtDef", 3, $1, $2, $3);}
+    | Specifier ExtDecList error   { $$ = newTreeNode("ExtDef", 3, $1, $2, $3); ErrorFlag = 1; }
+    | error SEMI                   { $$ = newTreeNode("ExtDef", 2, $1, $2); ErrorFlag = 1;}
     ;
 
 ExtDecList: VarDec                  { $$ = newTreeNode("ExtDecList", 1, $1);}
@@ -109,6 +111,8 @@ Stmt: Exp SEMI                                  { $$ = newTreeNode("Stmt", 2, $1
     | IF LP Exp RP Stmt ELSE Stmt               { $$ = newTreeNode("Stmt", 7, $1, $2, $3, $4, $5, $6, $7);}
     | WHILE LP Exp RP Stmt                      { $$ = newTreeNode("Stmt", 5, $1, $2, $3, $4, $5);}
     | error SEMI                                { $$ = newTreeNode("Stmt", 2, $1, $2);  ErrorFlag = 1; /*errorTypeB("Syntax error");*/} 
+    | WHILE LP error RP Stmt                    { $$ = newTreeNode("Stmt", 5, $1, $2, $3, $4, $5); ErrorFlag = 1;}
+    | RETURN error SEMI                         { $$ = newTreeNode("Stmt", 3, $1, $2, $3); ErrorFlag = 1;}
     ;
 
 /* Local Definitions */
