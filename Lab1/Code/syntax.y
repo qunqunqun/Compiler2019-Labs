@@ -105,8 +105,9 @@ StmtList: Stmt StmtList                         { $$ = newTreeNode("StmtList", 2
 Stmt: Exp SEMI                                  { $$ = newTreeNode("Stmt", 2, $1, $2);}
     | CompSt                                    { $$ = newTreeNode("Stmt", 1, $1);}
     | RETURN Exp SEMI                           { $$ = newTreeNode("Stmt", 3, $1, $2, $3);}
-    | IF LP Exp RP Stmt                         { $$ = newTreeNode("Stmt", 4, $1, $2, $3, $4  );}
-    | IF LP Exp RP Stmt ELSE Stmt               { $$ = newTreeNode("Stmt", 5, $1, $2, $3, $4, $5);}
+    | IF LP Exp RP Stmt                         { $$ = newTreeNode("Stmt", 4, $1, $2, $3, $4 );}
+    | IF LP Exp RP Stmt ELSE Stmt               { $$ = newTreeNode("Stmt", 7, $1, $2, $3, $4, $5, $6, $7);}
+    | WHILE LP Exp RP Stmt                      { $$ = newTreeNode("Stmt", 5, $1, $2, $3, $4, $5);}
     | error SEMI                                { $$ = newTreeNode("Stmt", 2, $1, $2);  ErrorFlag = 1; /*errorTypeB("Syntax error");*/} 
     ;
 
@@ -141,7 +142,7 @@ Exp:  Exp ASSIGNOP Exp                          { $$ = newTreeNode("Exp", 3, $1,
     | LP Exp RP                                 { $$ = newTreeNode("Exp", 3, $1, $2, $3);}
     | MINUS Exp                                 { $$ = newTreeNode("Exp", 2, $1, $2);}
     | NOT Exp                                   { $$ = newTreeNode("Exp", 2, $1, $2);}
-    | ID LP Args RP                             { $$ = newTreeNode("Exp", 1, $1);}
+    | ID LP Args RP                             { $$ = newTreeNode("Exp", 4, $1, $2, $3, $4);}
     | ID LP RP                                  { $$ = newTreeNode("Exp", 3, $1, $2, $3);}
     | Exp LB Exp RB                             { $$ = newTreeNode("Exp", 4, $1, $2, $3, $4);}
     | Exp DOT ID                                { $$ = newTreeNode("Exp", 3, $1, $2, $3);}
