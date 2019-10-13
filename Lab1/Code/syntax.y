@@ -166,5 +166,6 @@ void yyerror(char *msg) {
 }
 
 void errorTypeB(char * msg) {
+    ErrorFlag = 1;
     printf("Error type \033[31mB\033[0m at Line \033[31m%d\033[0m: %s\n", yylineno, msg);
 }

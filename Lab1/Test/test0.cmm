@@ -1,32 +1,25 @@
-/*
-* comments
+/**
+int a, b;
+**comments
+/\\\\\\\\\\\\\\\\\\\/
+/
 */
-int main() {
-int n, n2,/**/ n1, n0//\//*/;
-
-while(n < 10) {
-n2 = n / 1 + 2;
-/*This is a comment.\
-/\//\/******\/\/\/\/
-if(n == (n0)) {
-put_int(n);
+int /*/**\function\*/maxFunction(int a, //int y) {
+//parameters: a,b
+int /*z*/ b){
+int z;
+/*****
+int z = a;
+****\*/
+if(a > b) {/*{
+z = 1; a = 3;
+b = a * 2;/*} \\\
+\\
+*/ z = a;
 }
-*/
-n1 = (n / 10) + 10;
-n0 = n + 10;
-//put_int(n);\\*/;
-if(n == func(n2) * func(n1) + func(n0))
-put_int(/*(m+*/n));
-/*\}*\/*
-}*/
-n /*_1*/= n + 1;
+else { //b > a comments*//\\//*
+//\\*//\\*//\\//*//\\*//\\//
+z = b;
 }
-return /**/0;
+return z/*ends\/\/\/\/\/\/*/;
 }
-
-
-int func(int n) { //function
-return n /*\*/* n /**\2*/* n;
-}
-
-/**end of function~
