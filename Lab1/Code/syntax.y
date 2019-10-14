@@ -107,7 +107,7 @@ StmtList: Stmt StmtList                         { $$ = newTreeNode("StmtList", 2
 Stmt: Exp SEMI                                  { $$ = newTreeNode("Stmt", 2, $1, $2);}
     | CompSt                                    { $$ = newTreeNode("Stmt", 1, $1);}
     | RETURN Exp SEMI                           { $$ = newTreeNode("Stmt", 3, $1, $2, $3);}
-    | IF LP Exp RP Stmt                         { $$ = newTreeNode("Stmt", 4, $1, $2, $3, $4 );}
+    | IF LP Exp RP Stmt                         { $$ = newTreeNode("Stmt", 5, $1, $2, $3, $4 ,$5);}
     | IF LP Exp RP Stmt ELSE Stmt               { $$ = newTreeNode("Stmt", 7, $1, $2, $3, $4, $5, $6, $7);}
     | WHILE LP Exp RP Stmt                      { $$ = newTreeNode("Stmt", 5, $1, $2, $3, $4, $5);}
     | error SEMI                                { $$ = newTreeNode("Stmt", 2, $1, $2);  ErrorFlag = 1; /*errorTypeB("Syntax error");*/} 

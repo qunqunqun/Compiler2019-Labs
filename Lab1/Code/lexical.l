@@ -7,10 +7,7 @@
 	//#define LEX_DEBUG
 	void debug(char *msg) {
 	#ifdef YY_DEBUG
-    	if(strcmp(msg, "annotation") == 0)
-        	printf("%d: annotation\n", yylineno);
-    	else
-        	printf("%d: %s: %s\n", yylineno, msg, yytext);
+        printf("%d: %s: %s\n", yylineno, msg, yytext);
 	#endif
 }
 %}
