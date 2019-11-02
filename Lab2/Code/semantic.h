@@ -50,17 +50,6 @@ struct SymbolElem_ {
     SymbolElem down;     //local GrammarTree chain
 };
 
-SymbolElem symbol_HashTable[MAX_HASHNUM]; //define hash table
-
-SymbolElem symbol_Stack[MAX_STACKNUM]; //define symelem stack
-int Top_of_stack = -1;  //the top of stack
-
-SymbolElem symList[MAX_STACKNUM];
-int global_Symbol_Index = 0;         //global sym  index,符号表
-Type typeList[MAX_STACKNUM];
-int global_Type_Index = 0;        //global type index，类型定义
-
-
 void semantic_Init();
 FieldList getFieldList(GramTree* root); //得到节点的域
 Type getType(GramTree* root);         //得到树节点的Type

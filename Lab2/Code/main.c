@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include "common.h"
-#include "GramTree.h"
+#include "semantic.h"
 
 extern FILE* yyin;
 extern int yylex();
@@ -24,9 +24,8 @@ int main(int argc, char ** argv){
 	yyparse();
 	fclose(f);
 	if( ErrorFlag == 0){
-		printGramTree(treeRoot,0);
-		//if has no error test senamatic
+		printGramTree(treeRoot,0);	//if has no error test senamatic
+		semanticParse(treeRoot);
 	}
-	
 	return 0;
 }

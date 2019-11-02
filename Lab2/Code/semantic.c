@@ -1,5 +1,14 @@
 #include "semantic.h"
 
+SymbolElem symbol_HashTable[MAX_HASHNUM]; //define hash table
+
+SymbolElem symbol_Stack[MAX_STACKNUM]; //define symelem stack
+int Top_of_stack = -1;  //the top of stack
+
+SymbolElem symList[MAX_STACKNUM];
+int global_Symbol_Index = 0;         //global sym  index,符号表
+Type typeList[MAX_STACKNUM];
+int global_Type_Index = 0;        //global type index，类型定义
 
 void semantic_Init(){ //初始化函数
     assert(Top_of_stack == -1);
@@ -26,6 +35,7 @@ unsigned int hash_pjw(char* name) {     //hash函数
 }
 
 int isEqual(char *a, char *b) {
+    printf("%s, %s\n",a,b);
     if(strcmp(a,b) == 0) {
         return 1;
     } else{
@@ -71,7 +81,7 @@ FieldList getFieldList(GramTree* root) { //DefList
                 GramTree* Dec = decList->child[0];
                 SymbolElem t = Handle_VarDec(Dec, tempType); //获得符号定义，下一步进行插入
                 if(Dec->nChild == 3) { //VarDec ASSOGNOP EXP
-                    printErrorOfSemantic(15,Dec->child[2]->lineNo,Dec->child[2]->lineNo);
+                    printErrorOfSemantic(15,Dec->child[2]->lineNo,Dec->child[2]->val.str);
                 }
             
                 if(decList->nChild == 1) {
@@ -126,8 +136,9 @@ void insert_Symbol_Table(SymbolElem p, int stackIndex) {
 }
 
 void Insert_Into_Table(GramTree* root) {
-    if (isEqual( root->tag, "ExtDef") == 1) {
-        if(isEqual( root->child[1]->tag, "ExtDecList") == 1) { //ExtDef -> Specifier ExtDeclist SEMI
+    if (isEqual( root->tag, "ExtDef") == 1) {   //ExtDef -> Specifier ExtDeclist SEMI
+        if(isEqual( root->child[1]->tag, "ExtDecList") == 1) { 
+            printf("%s\n",root->child[0]->tag);
             Type temp_type = getType(root->child[0]); //get type of specifier
             GramTree* t = root->child[1];      //ExtDeclist
             while(t != NULL) {
@@ -141,6 +152,11 @@ void Insert_Into_Table(GramTree* root) {
                     t = t->child[2];
                 }
             }
+        } else if(isEqual( root->child[1]->tag, "FunDec") == 1) { //special for Function
+
+
+        } else if(isEqual( root->child[1]->tag, "SEMI") == 1) { //special for STRUCT
+            getType(root->child[0]);
         }
 
     }
@@ -152,6 +168,7 @@ void Analyse(GramTree* root) { //分析函数
         return;
     }
     if(isEqual(root->tag, "ExtDef") == 1){ //ExtDef
+        printf("start Insert into Table\n");
         Insert_Into_Table(root);
     } else {
         for(int i = 0; i < count_of_child; i++){ //开始进行分析
@@ -164,6 +181,7 @@ void Analyse(GramTree* root) { //分析函数
 
 
 void semanticParse(GramTree * root) {
+    printf("strat semantic parse \n");
     semantic_Init();
     if(root != NULL) {
         Analyse(root); //开始进行分析
