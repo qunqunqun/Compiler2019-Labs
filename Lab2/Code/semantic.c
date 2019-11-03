@@ -44,8 +44,9 @@ int isEqual(char *a, char *b) {
 }
 
 SymbolElem Handle_VarDec(GramTree* root, Type type) { //不进行插入操作
+    root = root->child[0];
     SymbolElem res = NULL;
-    if (root->nChild == 4) { // VarDec ->VarDec LB INT RB 
+    if (root->nChild == 4) { // VarDec ->VarDec LB INT RB 数组
         Type newType = malloc(sizeof(Typesize)); 
         newType->kind = ARRAY;
         newType->u.array.elem = type;
@@ -60,6 +61,7 @@ SymbolElem Handle_VarDec(GramTree* root, Type type) { //不进行插入操作
         res->u.var = type;
         res->kind = VAR_ELEMENT;    
         res->lineNo = root->lineNo;
+        printf("DEC:%s %s\n",root->child[0]->tag, root->child[0]->val.str);
         strcpy(res->name, root->child[0]->val.str); //复制名字
     }
     return res;
@@ -67,33 +69,64 @@ SymbolElem Handle_VarDec(GramTree* root, Type type) { //不进行插入操作
 
 FieldList getFieldList(GramTree* root) { //DefList
     FieldList temp = malloc(sizeof(FieldListsize));
-    FieldList list = NULL, tail;
+    FieldList head = NULL, tailer;
     GramTree* defList = root;
     while(defList != NULL) { //DefList -> Def DefList
-        if(defList->nChild == 1) {
-            defList = NULL;
-            break; 
+        printf("%s,%d\n",defList->tag,defList->nChild);
+        if(defList->nChild == 0) { //DefList ->empty
+            break;
         } else {
             GramTree* def = defList->child[0]; //Def -> sepcifier DecList SEMI
             Type tempType = getType(def->child[0]); // sepcifier
             GramTree* decList = def->child[1]; 
             while(decList != NULL) {    //DecList -> Dec | Dec COMMA DecList
                 GramTree* Dec = decList->child[0];
-                SymbolElem t = Handle_VarDec(Dec, tempType); //获得符号定义，下一步进行插入
-                if(Dec->nChild == 3) { //VarDec ASSOGNOP EXP
-                    printErrorOfSemantic(15,Dec->child[2]->lineNo,Dec->child[2]->val.str);
+                SymbolElem temp_Symbol = Handle_VarDec(Dec, tempType); //获得符号定义，下一步进行插入
+                if(Dec->nChild == 3) { //Dec -> VarDec ASSOGNOP EXP
+                    printErrorOfSemantic(15,Dec->child[2]->lineNo,Dec->child[2]->val.str); //ASSIGN
+                } else { //Dec -> VarDec, 进行检查后插入
+                    FieldList temp_F = head;
+                    while(temp_F != NULL) {
+                        if(isEqual(temp_F->name, temp_Symbol->name) == 1) {
+                             printErrorOfSemantic(15,Dec->child[0]->lineNo,temp_F->name); //REDEFINE
+                             break;
+                        }
+                        temp_F = temp_F->tail;
+                    }
+                    //check is OK and 进行插入到尾部
+                    if(temp_F == NULL) {
+                        temp_F = malloc(sizeof(FieldListsize));
+                        temp_F->name = (char*)malloc(sizeof(char)*30);
+                        strcpy(temp_F->name, temp_Symbol->name);
+                        temp_F->type = tempType;
+                        temp_F->tail = NULL;
+                        if(head == NULL) {
+                            head = temp_F;
+                            tailer = head;
+                        } else {
+                            tailer->tail = temp_F;
+                            tailer = temp_F;
+                        }
+                    }
+                    //插入到符号表中
+                    //insert_Symbol_Table(temp_Symbol, Top_of_stack);
                 }
-            
                 if(decList->nChild == 1) {
-
+                    decList = NULL;
                 } else {
-
+                    decList = decList->child[2];
                 }
             }
-
+        }
+        printf("%s,%d\n",defList->tag,defList->nChild);
+        if(defList->nChild == 2) {
+            printf("sssssssssssssssss\n");
+            defList = defList->child[1]; //next deflist
+            printf("sssssssssssssssss\n");
+        } else {
+            defList = NULL;
         }
     }
-
 }
 
 Type getType(GramTree* root) { //返回节点的Type
@@ -101,9 +134,9 @@ Type getType(GramTree* root) { //返回节点的Type
     GramTree* p = root->child[0]; 
     if(isEqual(p->tag , "TYPE") == 1) { //节点类型int和float
         temp->kind = BASIC;   //基本变量类型
-        if(isEqual(p->val.str , "INT") == 1){   
+        if(isEqual(p->val.str , "int") == 1){   
             temp->u.basic = INT_TYPE;
-        } else if(isEqual(p->val.str , "FLOAT") == 1){
+        } else if(isEqual(p->val.str , "float") == 1){
             temp->u.basic = FLOAT_TYPE;
         }
     } else if(isEqual(p->tag, "StructSpecifier") == 1){    //Struct类型
