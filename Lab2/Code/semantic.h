@@ -50,13 +50,25 @@ struct SymbolElem_ {
     SymbolElem down;     //local GrammarTree chain
 };
 
+//分析入口
 void semantic_Init();
+void semanticParse(GramTree* root);     //semantic parser
+
+//处理函数
+SymbolElem Handle_VarDec(GramTree* h, Type type); //进行处理变量的符号表定义
+void Handle_ExtDef(GramTree* root);
+
+//工具人函数
 FieldList getFieldList(GramTree* root); //得到节点的域
 Type getType(GramTree* root);         //得到树节点的Type
-SymbolElem Handle_VarDec(GramTree* h, Type type); //进行处理变量的符号表定义
-void Insert_Into_Table(GramTree* root);
-void semanticParse(GramTree* root);     //semantic parser
+
+
+// SymbolElem_ findFromSymbolTable();
+void Clear_TopOf_Stack();   //跳出嵌套
 void insert_Symbol_Table(SymbolElem p, int stackIndex); // stackIndex
+SymbolElem findFromTable_Struct(char *name);
+
+//报错
 void printErrorOfSemantic(int error_type, int line_no, char* str);
 
 #endif

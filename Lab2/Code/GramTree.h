@@ -4,8 +4,8 @@
 typedef struct TreeNode
 {
     char tag[32];   
-    int symIndex;
-    int typeIndex;       
+    // int symIndex;
+    // int typeIndex;       
     union { //value
         int a;
         float b; // if using exp, precision of float may lost while using ATOF //TODO 
