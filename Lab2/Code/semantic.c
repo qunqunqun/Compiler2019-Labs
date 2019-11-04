@@ -10,10 +10,33 @@ int Top_of_stack = -1;  //the top of stack
 // Type typeList[MAX_STACKNUM];
 // int global_Type_Index = 0;        //global type index，类型定义
 
+//工具人函数
 void printPhase(char * msg){
     printf("---------- %s ----------\n", msg);
 }
 
+void printError(char * msg){
+    printf("\033[31mEroor %s \033[0m \n", msg);
+}
+
+void printProduction(GramTree* root){
+    printf("%s -> ",root->tag);
+    int i=0;
+    while(i<root->nChild){
+        printf("%s ",root->child[i]->tag);
+        i++;
+    }
+    printf("\n");
+}
+
+void printSymbolElem(SymbolElem sym){
+    printPhase("printSymbolElem() Start");
+    printf("Symbol.Name is: %s\n",sym->name);
+    printf("Symbol.lineNo is: %d\n",sym->lineNo);
+    printf("Symbol.kind is: %d\n",sym->kind);    
+    // TODO: More information
+    printPhase("printSymbolElem() End");
+}
 
 //工具人函数
 void semantic_Init(){ //初始化函数
@@ -49,7 +72,7 @@ int isEqual(char *a, char *b) {
 
 //处理规则函数
 SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插入操作
-    //printf("Handle_VarDec:%s\n",root->tag);
+    printPhase("Handle_VarDec() Start");
     SymbolElem res = NULL;
     if (root->nChild == 4) { // VarDec ->VarDec LB INT RB 数组
         Type newType = malloc(sizeof(Typesize)); 
@@ -69,6 +92,7 @@ SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插
         //printf("DEC:%s %s\n",root->child[0]->tag, root->child[0]->val.str);
         strcpy(res->name, root->child[0]->val.str); //复制名字
     }
+    printf("res= %s\n",res->name);
     printPhase("Handle_VarDec() End");
     return res;
 }
@@ -91,7 +115,7 @@ SymbolElem findFromTable_Struct(char *name) {
 
 //工具函数
 void Clear_TopOf_Stack() { //将最顶层进行清理
-    printf("clear Top\n");
+    printPhase("Clear Top of Stack");
     SymbolElem temp = symbol_Stack[Top_of_stack]; //最前面的
     while(temp != NULL) {
         SymbolElem toFree = NULL;
@@ -99,7 +123,7 @@ void Clear_TopOf_Stack() { //将最顶层进行清理
         unsigned int HashNum = hash_pjw(temp->name);
         SymbolElem p = symbol_HashTable[HashNum];
         if(p == NULL) {
-            printf("error while clear stack.\n");
+            printError("error while clear stack");
         } else {
             if(isEqual(p->name, temp->name) == 1){ 
                 toFree = p;
@@ -115,7 +139,7 @@ void Clear_TopOf_Stack() { //将最顶层进行清理
             }
         }
         if(toFree == NULL) {
-            printf("error while clear stack.\n");
+            printError("error while clear stack");
         } else {
             free(toFree);
         }
@@ -123,7 +147,7 @@ void Clear_TopOf_Stack() { //将最顶层进行清理
         temp = temp->down;
     }
     Top_of_stack--; //退出嵌套
-    printf("Finish clear\n");
+    printPhase("Finish Clear Top of Stack");
 }
 
 FieldList getFieldList(GramTree* root) { //DefList
@@ -141,7 +165,8 @@ FieldList getFieldList(GramTree* root) { //DefList
             while(decList != NULL) {    //DecList -> Dec | Dec COMMA DecList
                 GramTree* Dec = decList->child[0];
                 SymbolElem temp_Symbol = Handle_VarDec(Dec->child[0], tempType); //获得符号定义，下一步进行插入
-                if(Dec->nChild == 3) { //Dec -> VarDec ASSOGNOP EXP
+                if(Dec->nChild == 3) { 
+                    //Dec -> VarDec ASSOGNOP EXP 结构体内不能初始化
                     printErrorOfSemantic(15,Dec->child[2]->lineNo,Dec->child[2]->val.str); //ASSIGN
                 } else { 
                     //Dec -> VarDec, 进行检查后插入
@@ -168,7 +193,7 @@ FieldList getFieldList(GramTree* root) { //DefList
                             tailer = temp_F;
                         }
                         //插入到符号表中
-                        insert_Symbol_Table(temp_Symbol, Top_of_stack);
+                        insert_Symbol_Table(temp_Symbol);
                     }
                 }
                 if(decList->nChild == 1) {
@@ -187,7 +212,8 @@ FieldList getFieldList(GramTree* root) { //DefList
 }
 
 Type getType(GramTree* root) { //返回节点的Type
-    printf("getType:%s\n",root->tag);
+    // NOTE: root is Specifier
+    assert(isEqual(root->tag,"Specifier"));
     Type temp = malloc(sizeof(Typesize));
     GramTree* p = root->child[0]; 
     if(isEqual(p->tag , "TYPE") == 1) { //节点类型int和float
@@ -213,14 +239,14 @@ Type getType(GramTree* root) { //返回节点的Type
             if(isEqual(p->child[1]->child[0]->tag,"ID") == 1) {
                 strcpy(res->name, p->child[1]->child[0]->val.str); //p->child[1] means OptTag
             } else {
-                printf("Why not ID of Struct\n");
+                printError("Why not ID of Struct");
             }
             res->u.var = temp;
             res->lineNo = p->child[1]->lineNo;
             res->right = NULL;
             res->down = NULL;
             //插入到符号表中
-            insert_Symbol_Table(res, Top_of_stack);
+            insert_Symbol_Table(res);
         } else if(count_of_child == 2) { //变量的声明，需要找到变量
             SymbolElem f = findFromTable_Struct(p->child[1]->child[0]->val.str);
             if(f == NULL) { //报错
@@ -232,13 +258,25 @@ Type getType(GramTree* root) { //返回节点的Type
         }
     } else {
         printf("error"); assert(0);
-    }
+    }    
+    printf("getType in root %s, type is %d\n",root->tag,temp->kind);
     return temp;
 }
 
-void insert_Symbol_Table(SymbolElem p, int stackIndex) {
-    printf("start insert into SymbolTable:%s,%d,%d.\n",p->name,p->kind,stackIndex);
-    SymbolElem t = symbol_Stack[stackIndex]; //头元素
+void insert_Symbol_Table(SymbolElem p) {
+
+    if(p==NULL){
+        printError("Insert NULL Pointer into Symbol Table");
+    }
+
+    printf("Start insert %s into SymbolTable at Stack Index %d, kind is ",p->name,Top_of_stack);
+    switch (p-> kind){
+        case VAR_ELEMENT:printf("VAR_ELEMENT\n");break;
+        case FUNCTION:printf("FUNCTION\n");break;
+        case STRUCTURE_ELEMENT:printf("STRUCTURE_ELEMENT\n");break;
+        default:break;
+    }
+    SymbolElem t = symbol_Stack[Top_of_stack]; //头元素
     //插入之前需要检查重定义，也就是名字重复
     while(t != NULL) {
         if(isEqual(t->name, p->name) == 1 && p-> kind == VAR_ELEMENT) {
@@ -257,13 +295,14 @@ void insert_Symbol_Table(SymbolElem p, int stackIndex) {
     }
     //No conflict and insert
     unsigned int hashIndex = hash_pjw(p->name);
+
     if(symbol_HashTable[hashIndex] == NULL) {
         symbol_HashTable[hashIndex] = p;
     } else {
         p->right = symbol_HashTable[hashIndex];
         symbol_HashTable[hashIndex] = p; 
     }
-    //insert into stack and put into tail
+   //insert into stack and put into tail
     if(symbol_Stack[Top_of_stack] == NULL) {
         symbol_Stack[Top_of_stack] = p;
     } else {
@@ -273,11 +312,173 @@ void insert_Symbol_Table(SymbolElem p, int stackIndex) {
         }
         temp->down = p;
     }
+    printf("End insert into SymbolTable at Stack %d\n",Top_of_stack);
+}
+
+
+FieldList Handle_VarList(GramTree* root){
+    // VarList -> ParamDec COMMA VarList| ParamDec
+    printPhase("Handle_VarList() Begin");
+    printProduction(root);
+    FieldList res = NULL;
+    FieldList tail = NULL;
+
+    while(root!=NULL){
+        // ParamDec -> Specifier VarDec
+        GramTree* Paramdec = root->child[0];
+        //assert(isEqual(Paramdec->child[0]->tag,"Specifier"));
+        Type type = getType(Paramdec->child[0]);
+        SymbolElem symbol = Handle_VarDec(Paramdec->child[1],type);
+        insert_Symbol_Table(symbol);
+        FieldList var = malloc(sizeof(FieldListsize));
+        var->type = type;
+        char *s1 = malloc(sizeof(symbol->name));
+        strcpy(s1,symbol->name);
+        var->name = s1;
+        if(res == NULL){
+            res = var;
+            tail = var;
+        }else{
+            tail->tail = var;
+            tail = var;
+        }
+        if(root->nChild==3){
+            root = root->child[2];
+        }else{
+            break;
+        }
+    }
+    
+    printPhase("Handle_VarList() End");
+    return res;
+}
+
+SymbolElem Handle_FunDec(GramTree* root){ 
+    // FunDec ->  ID LP VarList RP | ID LP RP
+    printPhase("Handle_FunDec() Begin");
+    printProduction(root);
+    SymbolElem res = malloc(sizeof(symElemsize));
+
+    // Initialize res
+    strcpy(res->name,root->child[0]->tag);
+    res->lineNo = root->lineNo;
+    res->kind = FUNCTION;
+    res->down = NULL;
+    res->right = NULL;
+    res->u.func.complete = false;
+    res->u.func.retType = NULL;
+    res->u.func.varList = NULL;
+
+    if(root->nChild == 4){
+        res->u.func.varList = Handle_VarList(root->child[2]);
+    }
+
+    printPhase("Handle_FunDec() End");
+    return res;
+}
+
+void Handle_Dec(GramTree* root, Type type){
+    //Dec -> VarDec | VarDec ASSIGNOP Exp
+    printPhase("Handle_Dec() Begin");
+    printProduction(root);
+    SymbolElem symbol = NULL;
+    symbol = Handle_VarDec(root->child[0], type);
+    if(root->nChild == 3){
+        // TODO: compare type between VarDec and Exp
+    }else if (root->nChild == 1){
+        // Do nothing
+    }else{
+        printError("Number conflict"); assert(0);
+    }
+    printPhase("Handle_Dec() End");
+}
+
+void Handle_DecList(GramTree* root, Type type){
+    // DecList -> Dec| Dec COMMA DecList
+    printPhase("Handle_DecList() Begin");
+    printProduction(root);
+    while(root != NULL){
+        Handle_Dec(root->child[0],type);
+        if(root->lineNo == 3){
+            root = root->child[2];
+        }else{
+            break;
+        }
+    }
+
+    printPhase("Handle_DecList() End");
+}
+
+void Handle_Def(GramTree* root){
+    //Def -> Specifier DecList SEMI
+    printPhase("Handle_Def() Begin");
+    printProduction(root);
+    assert(root->lineNo == 3);
+    Type type = getType(root->child[0]);
+    Handle_DecList(root->child[1],type);
+    printPhase("Handle_Def() End");
+}
+
+void Handle_DefList(GramTree* root){
+    //DefList -> Def DefList | empty
+    printPhase("Handle_DefList() Begin");
+    printProduction(root);
+    if(root->nChild == 0){
+        return;
+    }
+    while(root->nChild == 2){
+        Handle_Def(root->child[0]);
+        root = root->child[1];
+
+        if(!(root->nChild == 0 || root->nChild ==2)){
+            printError("Handle_DefList");assert(0);
+        }
+    }
+
+
+    printPhase("Handle_DefList() End");
+}
+
+void Handle_Stmt(GramTree* root, Type type){
+    printPhase("Handle_Stmt() Begin");
+    printProduction(root);
+
+    printPhase("Handle_Stmt() End");
+}
+
+void Handle_StmtList(GramTree* root, Type type){
+    //StmtList -> Stmt StmtList | empty
+    printPhase("Handle_StmtList() Begin");
+    printProduction(root);
+    if(root->nChild == 0){
+        return;
+    }
+    while(root->nChild == 2){
+        Handle_Stmt(root->child[0], type);
+        root = root->child[1];
+
+        if(!(root->nChild == 0 || root->nChild ==2)){
+            printError("Handle_StmtList");assert(0);
+        }
+    }
+
+    printPhase("Handle_StmtList() End");
+}
+
+void Handle_CompSt(GramTree* root, Type type){
+    // CompSt -> LC DefList StmtList RC
+    printPhase("Handle_CompSt() Begin");
+    printProduction(root);
+    Handle_DefList(root->child[1]);
+    Handle_StmtList(root->child[2], type);
+    printPhase("Handle_CompSt() End");
 }
 
 void Handle_ExtDef(GramTree* root) {
+    printPhase("Handle_ExtDef() Begin");
     if (isEqual( root->tag, "ExtDef") == 1) {   //ExtDef -> Specifier ExtDeclist SEMI
         if(isEqual( root->child[1]->tag, "ExtDecList") == 1) { 
+            printProduction(root);
             printf("tag:%s\n",root->child[0]->tag);
             Type temp_type = getType(root->child[0]); //get type of specifier
             if(temp_type == NULL) { //不进行插入
@@ -287,7 +488,7 @@ void Handle_ExtDef(GramTree* root) {
             while(t != NULL) {
                 GramTree* curVarDec = t->child[0];  //VarDec
                 SymbolElem res = Handle_VarDec(curVarDec, temp_type);
-                insert_Symbol_Table(res, Top_of_stack);
+                insert_Symbol_Table(res);
                 int n = t->nChild;
                 if(n == 1) {        //DecList -> Dec
                     break;
@@ -295,14 +496,37 @@ void Handle_ExtDef(GramTree* root) {
                     t = t->child[2];
                 }
             }
-        } else if(isEqual( root->child[1]->tag, "FunDec") == 1) { //special for Function
+        } else if(isEqual( root->child[1]->tag, "FunDec") == 1) { 
+            printProduction(root);  // ExtDef -> Specifier FunDec CompSt
+            // Function ,meet {} stack ++;
+            Top_of_stack ++;
+            symbol_Stack[Top_of_stack] = NULL;
+            printf("tag:%s\n",root->child[0]->tag);
+            Type return_type = getType(root->child[0]); 
+            if(return_type == NULL) { //感觉不应该发生的
+                assert(0);
+                return; 
+            }
+            SymbolElem res = Handle_FunDec(root->child[1]);
+            if(res == NULL){
+                assert(0);
+            }
+            res->u.func.retType = return_type;
+            if(isEqual(root->child[2]->tag,"CompSt")){
+                res->u.func.complete = true;
+                Handle_CompSt(root->child[2],return_type);
+            }else{
+                res->u.func.complete = false;
+            }
 
-
+            insert_Symbol_Table(res);
+            Clear_TopOf_Stack();
         } else if(isEqual( root->child[1]->tag, "SEMI") == 1) { //special for STRUCT
             getType(root->child[0]);
         }
 
     }
+    printPhase("Handle_ExtDef() End");
 }
 
 void Analyse(GramTree* root) { //分析函数
@@ -311,7 +535,7 @@ void Analyse(GramTree* root) { //分析函数
         return;
     }
     if(isEqual(root->tag, "ExtDef") == 1){ //ExtDef
-        printf("originally start Insert into Table\n");
+        printPhase("Originally Start Insert Into Table");
         Handle_ExtDef(root);
     } else {
         for(int i = 0; i < count_of_child; i++){ //开始进行分析
@@ -348,7 +572,7 @@ void printErrorOfSemantic(int error_type, int line_no, char* str) {
         // case 12: printf(str << " is not an integer."); break;
         // case 13: printf("Illegal use of \" %s \"."); break;
         // case 14: printf("Non-existent field \" %s \"."); break;
-        case 15: if (str != "struct") printf("Redefined field \" %s \".", str); else printf("Initialize a field of structure."); break;
+        case 15: if (isEqual(str,"struct")==0) printf("Redefined field \" %s \".", str); else printf("Initialize a field of structure."); break;
         case 16: printf("Duplicated name \" %s \".",str); break;
         case 17: printf("Undefined structure\" %s \".",str); break;
         default: break;

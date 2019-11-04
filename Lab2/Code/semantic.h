@@ -18,6 +18,7 @@ typedef struct FieldList_ FieldListsize;
 typedef struct SymbolElem_ symElemsize;
 
 enum { INT_TYPE, FLOAT_TYPE };          
+enum { false, true} bool;
 
 struct Type_ {
     enum { BASIC, ARRAY, STRUCTURE } kind;
@@ -57,6 +58,15 @@ void semanticParse(GramTree* root);     //semantic parser
 //处理函数
 SymbolElem Handle_VarDec(GramTree* h, Type type); //进行处理变量的符号表定义
 void Handle_ExtDef(GramTree* root);
+SymbolElem Handle_FunDec(GramTree* root);
+void Handle_CompSt(GramTree* root, Type type);
+FieldList Handle_VarList(GramTree* root);
+void Handle_DefList(GramTree* root);
+void Handle_Def(GramTree* root);
+void Handle_DecList(GramTree* root, Type type);
+void Handle_Dec(GramTree* root, Type type);
+void Handle_StmtList(GramTree* root, Type type);
+void Handle_Stmt(GramTree* root, Type type);
 
 //工具人函数
 FieldList getFieldList(GramTree* root); //得到节点的域
@@ -65,7 +75,7 @@ Type getType(GramTree* root);         //得到树节点的Type
 
 // SymbolElem_ findFromSymbolTable();
 void Clear_TopOf_Stack();   //跳出嵌套
-void insert_Symbol_Table(SymbolElem p, int stackIndex); // stackIndex
+void insert_Symbol_Table(SymbolElem p); // stackIndex
 SymbolElem findFromTable_Struct(char *name);
 
 //报错
