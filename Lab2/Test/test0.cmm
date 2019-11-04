@@ -1,4 +1,5 @@
 struct A{
+	int a;
 	int b;
 	int b;
 };

@@ -10,6 +10,10 @@ int global_Symbol_Index = 0;         //global sym  index,符号表
 Type typeList[MAX_STACKNUM];
 int global_Type_Index = 0;        //global type index，类型定义
 
+void printPhase(char * msg){
+    printf("---------- %s ----------\n", msg);
+}
+
 void semantic_Init(){ //初始化函数
     assert(Top_of_stack == -1);
     for (int i = 0; i < MAX_HASHNUM; i++) {
@@ -35,7 +39,7 @@ unsigned int hash_pjw(char* name) {     //hash函数
 }
 
 int isEqual(char *a, char *b) {
-    printf("%s, %s\n",a,b);
+    // printf("%s, %s\n",a,b);
     if(strcmp(a,b) == 0) {
         return 1;
     } else{
@@ -44,6 +48,7 @@ int isEqual(char *a, char *b) {
 }
 
 SymbolElem Handle_VarDec(GramTree* root, Type type) { //不进行插入操作
+    printPhase("Handle_VarDec() Begin");
     root = root->child[0];
     SymbolElem res = NULL;
     if (root->nChild == 4) { // VarDec ->VarDec LB INT RB 数组
@@ -64,10 +69,22 @@ SymbolElem Handle_VarDec(GramTree* root, Type type) { //不进行插入操作
         printf("DEC:%s %s\n",root->child[0]->tag, root->child[0]->val.str);
         strcpy(res->name, root->child[0]->val.str); //复制名字
     }
+    printPhase("Handle_VarDec() End");
     return res;
 }
 
-FieldList getFieldList(GramTree* root) { //DefList
+FieldList getFieldList(GramTree* root) { //
+    printPhase("Function getFieldList()");
+
+    int i = 0;
+    printf("Print Root:%s\n",root->tag);
+    printf("Print Childs:");
+    while(i<root->nChild){
+        printf("%s,",root->child[i]->tag);
+        i++;
+    }
+    printf("\n");
+
     FieldList temp = malloc(sizeof(FieldListsize));
     FieldList head = NULL, tailer;
     GramTree* defList = root;
@@ -84,7 +101,8 @@ FieldList getFieldList(GramTree* root) { //DefList
                 SymbolElem temp_Symbol = Handle_VarDec(Dec, tempType); //获得符号定义，下一步进行插入
                 if(Dec->nChild == 3) { //Dec -> VarDec ASSOGNOP EXP
                     printErrorOfSemantic(15,Dec->child[2]->lineNo,Dec->child[2]->val.str); //ASSIGN
-                } else { //Dec -> VarDec, 进行检查后插入
+                } else { 
+                    //Dec -> VarDec, 进行检查后插入
                     FieldList temp_F = head;
                     while(temp_F != NULL) {
                         if(isEqual(temp_F->name, temp_Symbol->name) == 1) {
@@ -108,7 +126,7 @@ FieldList getFieldList(GramTree* root) { //DefList
                             tailer = temp_F;
                         }
                     }
-                    //插入到符号表中
+                    //TODO:插入到符号表中
                     //insert_Symbol_Table(temp_Symbol, Top_of_stack);
                 }
                 if(decList->nChild == 1) {
@@ -120,9 +138,8 @@ FieldList getFieldList(GramTree* root) { //DefList
         }
         printf("%s,%d\n",defList->tag,defList->nChild);
         if(defList->nChild == 2) {
-            printf("sssssssssssssssss\n");
             defList = defList->child[1]; //next deflist
-            printf("sssssssssssssssss\n");
+            printf("defList = defList->child[1]; //next deflist\n");
         } else {
             defList = NULL;
         }
@@ -148,7 +165,7 @@ Type getType(GramTree* root) { //返回节点的Type
             symbol_Stack[Top_of_stack] = NULL;
             GramTree* OptTag = p->child[1];     //OptTag
             temp->u.structure = getFieldList(p->child[3]);    //得到域
-
+            
         } else if(count_of_child == 2) {
 
         }
@@ -169,13 +186,14 @@ void insert_Symbol_Table(SymbolElem p, int stackIndex) {
 }
 
 void Insert_Into_Table(GramTree* root) {
-    if (isEqual( root->tag, "ExtDef") == 1) {   //ExtDef -> Specifier ExtDeclist SEMI
-        if(isEqual( root->child[1]->tag, "ExtDecList") == 1) { 
-            printf("%s\n",root->child[0]->tag);
+    if (isEqual( root->tag, "ExtDef") == 1) {  
+        //ExtDef -> Specifier ExtDeclist SEMI
+        if(isEqual( root->child[1]->tag, "ExtDecList") == 1) { // global variables
+            printf("global variables's specifier is %s\n",root->child[0]->tag);
             Type temp_type = getType(root->child[0]); //get type of specifier
             GramTree* t = root->child[1];      //ExtDeclist
             while(t != NULL) {
-                GramTree* curVarDec = t->child[0];
+                GramTree* curVarDec = t->child[0];  //VarDec
                 SymbolElem res = Handle_VarDec(curVarDec, temp_type);
                 insert_Symbol_Table(res, Top_of_stack);
                 int n = t->nChild;
@@ -201,7 +219,7 @@ void Analyse(GramTree* root) { //分析函数
         return;
     }
     if(isEqual(root->tag, "ExtDef") == 1){ //ExtDef
-        printf("start Insert into Table\n");
+        printf("---------- Start Insert Into Table ----------\n");
         Insert_Into_Table(root);
     } else {
         for(int i = 0; i < count_of_child; i++){ //开始进行分析
@@ -214,7 +232,7 @@ void Analyse(GramTree* root) { //分析函数
 
 
 void semanticParse(GramTree * root) {
-    printf("strat semantic parse \n");
+    printf("---------- Strat Semantic Parse ----------\n");
     semantic_Init();
     if(root != NULL) {
         Analyse(root); //开始进行分析

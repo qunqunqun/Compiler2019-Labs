@@ -61,7 +61,7 @@ gramTest:
 	./parser ../Test/test15.cmm
 
 test:
-	./parser ../Test/test1.cmm
+	./parser ../Test/test0.cmm
 
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
