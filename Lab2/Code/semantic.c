@@ -45,7 +45,7 @@ int isEqual(char *a, char *b) {
 
 //处理规则函数
 SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插入操作
-    printf("Handle_VarDec:%s\n",root->val.str);
+    //printf("Handle_VarDec:%s\n",root->tag);
     SymbolElem res = NULL;
     if (root->nChild == 4) { // VarDec ->VarDec LB INT RB 数组
         Type newType = malloc(sizeof(Typesize)); 
@@ -62,16 +62,29 @@ SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插
         res->u.var = type;
         res->kind = VAR_ELEMENT;    
         res->lineNo = root->lineNo;
-        printf("DEC:%s %s\n",root->child[0]->tag, root->child[0]->val.str);
+        //printf("DEC:%s %s\n",root->child[0]->tag, root->child[0]->val.str);
         strcpy(res->name, root->child[0]->val.str); //复制名字
     }
     return res;
 }
 
 
+//查找函数
+SymbolElem findFromTable_Struct(char *name) {
+    unsigned int HashNum = hash_pjw(name);
+    //find Strcut
+    SymbolElem res = symbol_HashTable[HashNum];
+    while(res != NULL) {
+        if(isEqual(res->name,name) == 1 && res->kind == STRUCTURE_ELEMENT) { //find
+            break;
+        }
+        res = res->right;
+    }
+    return res;
+}
 
 
-//获得类型函数
+//工具函数
 void Clear_TopOf_Stack() { //将最顶层进行清理
     printf("clear Top\n");
     SymbolElem temp = symbol_Stack[Top_of_stack]; //最前面的
@@ -113,7 +126,7 @@ FieldList getFieldList(GramTree* root) { //DefList
     FieldList head = NULL, tailer;
     GramTree* defList = root;
     while(defList != NULL) { //DefList -> Def DefList
-        printf("%s,%d\n",defList->tag,defList->nChild);
+        //printf("%s,%d\n",defList->tag,defList->nChild);
         if(defList->nChild == 0) { //DefList ->empty
             break;
         } else {
@@ -159,7 +172,6 @@ FieldList getFieldList(GramTree* root) { //DefList
                 }
             }
         }
-        printf("%s,%d\n",defList->tag,defList->nChild);
         if(defList->nChild == 2) {
             defList = defList->child[1]; //next deflist
         } else {
@@ -192,16 +204,25 @@ Type getType(GramTree* root) { //返回节点的Type
             //插入进符号表中
             SymbolElem res = malloc(sizeof(symElemsize)); 
             res->kind = STRUCTURE_ELEMENT;
-            strcpy(res->name, p->child[1]->val.str); //p->child[1] means OptTag
+            if(isEqual(p->child[1]->child[0]->tag,"ID") == 1) {
+                strcpy(res->name, p->child[1]->child[0]->val.str); //p->child[1] means OptTag
+            } else {
+                printf("Why not ID of Struct\n");
+            }
             res->u.var = temp;
             res->lineNo = p->child[1]->lineNo;
             res->right = NULL;
             res->down = NULL;
             //插入到符号表中
             insert_Symbol_Table(res, Top_of_stack);
-
-        } else if(count_of_child == 2) {
-            //TOD:类型的重定义
+        } else if(count_of_child == 2) { //变量的声明，需要找到变量
+            SymbolElem f = findFromTable_Struct(p->child[1]->child[0]->val.str);
+            if(f == NULL) { //报错
+                printErrorOfSemantic(17,p->child[1]->child[0]->lineNo,p->child[1]->child[0]->val.str);
+                return NULL;
+            } else {
+                temp = f->u.var; 
+            }
         }
     } else {
         printf("error"); assert(0);
@@ -210,20 +231,20 @@ Type getType(GramTree* root) { //返回节点的Type
 }
 
 void insert_Symbol_Table(SymbolElem p, int stackIndex) {
-    printf("start insert into SymbolTable:%s\n",p->name);
+    printf("start insert into SymbolTable:%s,%d,%d.\n",p->name,p->kind,stackIndex);
     SymbolElem t = symbol_Stack[stackIndex]; //头元素
     //插入之前需要检查重定义，也就是名字重复
     while(t != NULL) {
         if(isEqual(t->name, p->name) == 1 && p-> kind == VAR_ELEMENT) {
-            printErrorOfSemantic(3, t->lineNo, t->name); //error 3 redefine var
+            printErrorOfSemantic(3, p->lineNo, p->name); //error 3 redefine var
             return;
         }
         if(isEqual(t->name, p->name) == 1 && p-> kind == FUNCTION) {
-            printErrorOfSemantic(3, t->lineNo, t->name); //error 3 redefine Function
+            printErrorOfSemantic(4, p->lineNo, p->name); //error 3 redefine Function
             return;
         }
         if(isEqual(t->name, p->name) == 1 && p-> kind == STRUCTURE_ELEMENT) {
-            printErrorOfSemantic(16, t->lineNo, t->name); //error 3 redefine Struct
+            printErrorOfSemantic(16, p->lineNo, p->name); //error 3 redefine Struct
             return;
         }
         t = t->down;
@@ -248,11 +269,14 @@ void insert_Symbol_Table(SymbolElem p, int stackIndex) {
     }
 }
 
-void Insert_Into_Table(GramTree* root) {
+void Handle_ExtDef(GramTree* root) {
     if (isEqual( root->tag, "ExtDef") == 1) {   //ExtDef -> Specifier ExtDeclist SEMI
         if(isEqual( root->child[1]->tag, "ExtDecList") == 1) { 
             printf("tag:%s\n",root->child[0]->tag);
             Type temp_type = getType(root->child[0]); //get type of specifier
+            if(temp_type == NULL) { //不进行插入
+                return; 
+            }
             GramTree* t = root->child[1];      //ExtDeclist
             while(t != NULL) {
                 GramTree* curVarDec = t->child[0];
@@ -282,7 +306,7 @@ void Analyse(GramTree* root) { //分析函数
     }
     if(isEqual(root->tag, "ExtDef") == 1){ //ExtDef
         printf("originally start Insert into Table\n");
-        Insert_Into_Table(root);
+        Handle_ExtDef(root);
     } else {
         for(int i = 0; i < count_of_child; i++){ //开始进行分析
             if(root->child[i] != NULL) {
@@ -306,8 +330,8 @@ void printErrorOfSemantic(int error_type, int line_no, char* str) {
     switch(error_type) {
         // case 1: printf("Undefined variable \"%s\"." , str); break;
         // case 2: printf("Undefined function \" %s \".", str); break;
-        case 3: printf("Redefined variable \" %s \"."); break;
-        case 4: printf("Redefined function \" %s \"."); break;
+        case 3: printf("Redefined variable \" %s \".",str); break;
+        case 4: printf("Redefined function \" %s \".",str); break;
         // case 5: printf("Type mismatched for assignment."); break;
         // case 6: printf("The left-hand side of an assignment must be a variable."); break;
         // case 7: printf("Type mismatched for operands."); break;
@@ -319,8 +343,8 @@ void printErrorOfSemantic(int error_type, int line_no, char* str) {
         // case 13: printf("Illegal use of \" %s \"."); break;
         // case 14: printf("Non-existent field \" %s \"."); break;
         case 15: if (str != "struct") printf("Redefined field \" %s \".", str); else printf("Initialize a field of structure."); break;
-        case 16: printf("Duplicated name \" %s \"."); break;
-        // case 17: printf("Undefined structure\" %s \".",str); break;
+        case 16: printf("Duplicated name \" %s \".",str); break;
+        case 17: printf("Undefined structure\" %s \".",str); break;
         default: break;
     }
     printf("\n");

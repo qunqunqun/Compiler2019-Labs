@@ -1,5 +1,10 @@
+
+int b;
+float c;
+//float b;
+
 struct A{
-	int b;
 	int b;
 };
 
+struct B d;
