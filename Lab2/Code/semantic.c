@@ -16,7 +16,7 @@ void printPhase(char * msg){
 }
 
 void printError(char * msg){
-    printf("\033[31mEroor %s \033[0m \n", msg);
+    printf("\033[31mError %s \033[0m \n", msg);
 }
 
 void printProduction(GramTree* root){
@@ -38,7 +38,13 @@ void printSymbolElem(SymbolElem sym){
     printPhase("printSymbolElem() End");
 }
 
-//工具人函数
+void myPrintf(const char* format, ...){
+	va_list vp;
+	va_start(vp, format);
+	vprintf (format, vp);
+	va_end  (vp);
+}
+
 void semantic_Init(){ //初始化函数
     assert(Top_of_stack == -1);
     for (int i = 0; i < MAX_HASHNUM; i++) {
@@ -92,7 +98,7 @@ SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插
         //printf("DEC:%s %s\n",root->child[0]->tag, root->child[0]->val.str);
         strcpy(res->name, root->child[0]->val.str); //复制名字
     }
-    printf("res= %s\n",res->name);
+    myPrintf("res= %s\n",res->name);
     printPhase("Handle_VarDec() End");
     return res;
 }
@@ -100,11 +106,14 @@ SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插
 
 //查找函数
 SymbolElem findFromTable_Struct(char *name) {
+    return findFromTable(name);
+}
+
+SymbolElem findFromTable(char *name){
     unsigned int HashNum = hash_pjw(name);
-    //find Strcut
     SymbolElem res = symbol_HashTable[HashNum];
     while(res != NULL) {
-        if(isEqual(res->name,name) == 1 && res->kind == STRUCTURE_ELEMENT) { //find
+        if(isEqual(res->name,name)) { 
             break;
         }
         res = res->right;
@@ -257,9 +266,9 @@ Type getType(GramTree* root) { //返回节点的Type
             }
         }
     } else {
-        printf("error"); assert(0);
+        myPrintf("error"); assert(0);
     }    
-    printf("getType in root %s, type is %d\n",root->tag,temp->kind);
+    myPrintf("getType in root %s, type is %d\n",root->tag,temp->kind);
     return temp;
 }
 
@@ -269,11 +278,11 @@ void insert_Symbol_Table(SymbolElem p) {
         printError("Insert NULL Pointer into Symbol Table");
     }
 
-    printf("Start insert %s into SymbolTable at Stack Index %d, kind is ",p->name,Top_of_stack);
+    myPrintf("Start insert %s into SymbolTable at Stack Index %d, kind is ",p->name,Top_of_stack);
     switch (p-> kind){
-        case VAR_ELEMENT:printf("VAR_ELEMENT\n");break;
-        case FUNCTION:printf("FUNCTION\n");break;
-        case STRUCTURE_ELEMENT:printf("STRUCTURE_ELEMENT\n");break;
+        case VAR_ELEMENT:myPrintf("VAR_ELEMENT\n");break;
+        case FUNCTION:myPrintf("FUNCTION\n");break;
+        case STRUCTURE_ELEMENT:myPrintf("STRUCTURE_ELEMENT\n");break;
         default:break;
     }
     SymbolElem t = symbol_Stack[Top_of_stack]; //头元素
@@ -312,7 +321,7 @@ void insert_Symbol_Table(SymbolElem p) {
         }
         temp->down = p;
     }
-    printf("End insert into SymbolTable at Stack %d\n",Top_of_stack);
+    myPrintf("End insert into SymbolTable at Stack %d\n",Top_of_stack);
 }
 
 
@@ -377,6 +386,83 @@ SymbolElem Handle_FunDec(GramTree* root){
     return res;
 }
 
+int isTypeEqual(Type a, Type b){
+    return true;
+}
+
+
+
+Type Handle_Exp(GramTree* root){
+    // TODO: Return the type of Exp
+    printPhase("Handle_Exp() Begin");
+    printProduction(root);    
+    Type res = malloc(sizeof(Typesize));
+    switch (root->nChild){
+    case 1:
+        root = root->child[0];
+        // | ID
+        if(isEqual(root->tag,"ID")){
+            free(res);
+            SymbolElem symbol = findFromTable_Struct(root->tag);
+            if(symbol == NULL){
+                printErrorOfSemantic(1,root->lineNo,symbol->name);
+            }else if(symbol->kind == FUNCTION){
+                printErrorOfSemantic(11,root->lineNo,symbol->name);
+            }else{
+                res = symbol->u.var;
+            }
+        }
+        // | INT
+        else if(isEqual(root->tag,"INT")){
+            res->kind = BASIC;
+            res->u.basic = INT_TYPE;
+        }
+        // | FLOAT
+        else if(isEqual(root->tag,"FLOAT")){
+            res->kind = BASIC;
+            res->u.basic = FLOAT_TYPE;
+        }else{
+            printError("Switch in Handle_Exp Case 1");
+        }
+        break;
+    case 2:
+        /* TODO:code */
+        // | MINUS Exp
+        // | NOT Exp
+
+        break;
+    case 3:
+        /* TODO:code */
+        // Exp -> Exp ASSIGNOP Exp
+
+        // | Exp AND Exp
+        // | Exp OR Exp
+        // | Exp RELOP Exp
+        // | Exp PLUS Exp
+        // | Exp MINUS Exp
+        // | Exp STAR Exp
+        // | Exp DIV Exp
+
+        // | LP Exp RP
+        // | ID LP RP
+        // | Exp DOT ID
+        break;    
+    case 4:
+        /* TODO:code */
+        // | ID LP Args RP
+        // | Exp LB Exp RB
+
+        break;    
+    default:
+        printError("Switch in Handle_Exp");
+        break;
+    }
+
+    printPhase("Handle_Exp() End");
+    return res;
+}
+
+
 void Handle_Dec(GramTree* root, Type type){
     //Dec -> VarDec | VarDec ASSIGNOP Exp
     printPhase("Handle_Dec() Begin");
@@ -385,6 +471,12 @@ void Handle_Dec(GramTree* root, Type type){
     symbol = Handle_VarDec(root->child[0], type);
     if(root->nChild == 3){
         // TODO: compare type between VarDec and Exp
+        Type type_exp = malloc(sizeof(Typesize));
+        type_exp = Handle_Exp(root->child[2]);
+        if(isTypeEqual(type,type_exp) == false){
+            printErrorOfSemantic(5, root->lineNo,"");
+        }
+
     }else if (root->nChild == 1){
         // Do nothing
     }else{
@@ -440,8 +532,16 @@ void Handle_DefList(GramTree* root){
 }
 
 void Handle_Stmt(GramTree* root, Type type){
+    // TODO: Complete this function
+    // Stmt -> Exp SEMI
+    // | CompSt
+    // | RETURN Exp SEMI
+    // | IF LP Exp RP Stmt
+    // | IF LP Exp RP Stmt ELSE Stmt
+    // | WHILE LP Exp RP Stmt
     printPhase("Handle_Stmt() Begin");
     printProduction(root);
+
 
     printPhase("Handle_Stmt() End");
 }
@@ -479,7 +579,7 @@ void Handle_ExtDef(GramTree* root) {
     if (isEqual( root->tag, "ExtDef") == 1) {   //ExtDef -> Specifier ExtDeclist SEMI
         if(isEqual( root->child[1]->tag, "ExtDecList") == 1) { 
             printProduction(root);
-            printf("tag:%s\n",root->child[0]->tag);
+            myPrintf("tag:%s\n",root->child[0]->tag);
             Type temp_type = getType(root->child[0]); //get type of specifier
             if(temp_type == NULL) { //不进行插入
                 return; 
@@ -501,7 +601,7 @@ void Handle_ExtDef(GramTree* root) {
             // Function ,meet {} stack ++;
             Top_of_stack ++;
             symbol_Stack[Top_of_stack] = NULL;
-            printf("tag:%s\n",root->child[0]->tag);
+            myPrintf("tag:%s\n",root->child[0]->tag);
             Type return_type = getType(root->child[0]); 
             if(return_type == NULL) { //感觉不应该发生的
                 assert(0);
@@ -523,6 +623,7 @@ void Handle_ExtDef(GramTree* root) {
             Clear_TopOf_Stack();
         } else if(isEqual( root->child[1]->tag, "SEMI") == 1) { //special for STRUCT
             getType(root->child[0]);
+            // TODO: Complete this function
         }
 
     }
@@ -548,7 +649,7 @@ void Analyse(GramTree* root) { //分析函数
 
 
 void semanticParse(GramTree * root) {
-    printf("---------- Strat Semantic Parse ----------\n");
+    printPhase("Strat Semantic Parse");
     semantic_Init();
     if(root != NULL) {
         Analyse(root); //开始进行分析

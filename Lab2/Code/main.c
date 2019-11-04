@@ -25,7 +25,7 @@ int main(int argc, char ** argv){
 	fclose(f);
 	if( ErrorFlag == 0){
 		printGramTree(treeRoot,0);	//if has no error test senamatic
-    	printf("---------- Grammar Tree Printf End ----------\n");
+		printPhase("Grammar Tree Printf End");
 		semanticParse(treeRoot);
 	}
 	return 0;

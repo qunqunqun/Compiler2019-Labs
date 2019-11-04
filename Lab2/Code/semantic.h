@@ -67,16 +67,23 @@ void Handle_DecList(GramTree* root, Type type);
 void Handle_Dec(GramTree* root, Type type);
 void Handle_StmtList(GramTree* root, Type type);
 void Handle_Stmt(GramTree* root, Type type);
-
+Type Handle_Exp(GramTree* root);
 //工具人函数
 FieldList getFieldList(GramTree* root); //得到节点的域
 Type getType(GramTree* root);         //得到树节点的Type
-
+void printPhase(char * msg);
+void printError(char * msg);
+void printProduction(GramTree* root);
+void printSymbolElem(SymbolElem sym);
+void myPrintf(const char* format, ...);
 
 // SymbolElem_ findFromSymbolTable();
 void Clear_TopOf_Stack();   //跳出嵌套
 void insert_Symbol_Table(SymbolElem p); // stackIndex
 SymbolElem findFromTable_Struct(char *name);
+SymbolElem findFromTable(char *name);
+
+int isTypeEqual(Type a, Type b);
 
 //报错
 void printErrorOfSemantic(int error_type, int line_no, char* str);
