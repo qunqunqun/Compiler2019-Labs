@@ -10,15 +10,12 @@ int Top_of_stack = -1;  //the top of stack
 // Type typeList[MAX_STACKNUM];
 // int global_Type_Index = 0;        //global type index，类型定义
 
-<<<<<<< HEAD
 void printPhase(char * msg){
     printf("---------- %s ----------\n", msg);
 }
 
-=======
 
 //工具人函数
->>>>>>> 5555e3f8b0140e85c28a1f1e987007b3641fc982
 void semantic_Init(){ //初始化函数
     assert(Top_of_stack == -1);
     for (int i = 0; i < MAX_HASHNUM; i++) {
@@ -42,11 +39,7 @@ unsigned int hash_pjw(char* name) {     //hash函数
 }
 
 int isEqual(char *a, char *b) {
-<<<<<<< HEAD
-    // printf("%s, %s\n",a,b);
-=======
     //printf("%s, %s\n",a,b);
->>>>>>> 5555e3f8b0140e85c28a1f1e987007b3641fc982
     if(strcmp(a,b) == 0) {
         return 1;
     } else{
@@ -54,15 +47,9 @@ int isEqual(char *a, char *b) {
     }
 }
 
-<<<<<<< HEAD
-SymbolElem Handle_VarDec(GramTree* root, Type type) { //不进行插入操作
-    printPhase("Handle_VarDec() Begin");
-    root = root->child[0];
-=======
 //处理规则函数
 SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插入操作
     //printf("Handle_VarDec:%s\n",root->tag);
->>>>>>> 5555e3f8b0140e85c28a1f1e987007b3641fc982
     SymbolElem res = NULL;
     if (root->nChild == 4) { // VarDec ->VarDec LB INT RB 数组
         Type newType = malloc(sizeof(Typesize)); 
@@ -86,20 +73,6 @@ SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插
     return res;
 }
 
-<<<<<<< HEAD
-FieldList getFieldList(GramTree* root) { //
-    printPhase("Function getFieldList()");
-
-    int i = 0;
-    printf("Print Root:%s\n",root->tag);
-    printf("Print Childs:");
-    while(i<root->nChild){
-        printf("%s,",root->child[i]->tag);
-        i++;
-    }
-    printf("\n");
-
-=======
 
 //查找函数
 SymbolElem findFromTable_Struct(char *name) {
@@ -154,7 +127,6 @@ void Clear_TopOf_Stack() { //将最顶层进行清理
 }
 
 FieldList getFieldList(GramTree* root) { //DefList
->>>>>>> 5555e3f8b0140e85c28a1f1e987007b3641fc982
     FieldList temp = malloc(sizeof(FieldListsize));
     FieldList head = NULL, tailer;
     GramTree* defList = root;
@@ -198,11 +170,6 @@ FieldList getFieldList(GramTree* root) { //DefList
                         //插入到符号表中
                         insert_Symbol_Table(temp_Symbol, Top_of_stack);
                     }
-<<<<<<< HEAD
-                    //TODO:插入到符号表中
-                    //insert_Symbol_Table(temp_Symbol, Top_of_stack);
-=======
->>>>>>> 5555e3f8b0140e85c28a1f1e987007b3641fc982
                 }
                 if(decList->nChild == 1) {
                     decList = NULL;
@@ -213,10 +180,6 @@ FieldList getFieldList(GramTree* root) { //DefList
         }
         if(defList->nChild == 2) {
             defList = defList->child[1]; //next deflist
-<<<<<<< HEAD
-            printf("defList = defList->child[1]; //next deflist\n");
-=======
->>>>>>> 5555e3f8b0140e85c28a1f1e987007b3641fc982
         } else {
             defList = NULL;
         }
@@ -242,11 +205,6 @@ Type getType(GramTree* root) { //返回节点的Type
             Top_of_stack++;
             symbol_Stack[Top_of_stack] = NULL;
             temp->u.structure = getFieldList(p->child[3]);    //得到域
-<<<<<<< HEAD
-            
-        } else if(count_of_child == 2) {
-
-=======
             //定义结束之后回退栈
             Clear_TopOf_Stack();
             //插入进符号表中
@@ -271,7 +229,6 @@ Type getType(GramTree* root) { //返回节点的Type
             } else {
                 temp = f->u.var; 
             }
->>>>>>> 5555e3f8b0140e85c28a1f1e987007b3641fc982
         }
     } else {
         printf("error"); assert(0);
@@ -318,18 +275,10 @@ void insert_Symbol_Table(SymbolElem p, int stackIndex) {
     }
 }
 
-<<<<<<< HEAD
-void Insert_Into_Table(GramTree* root) {
-    if (isEqual( root->tag, "ExtDef") == 1) {  
-        //ExtDef -> Specifier ExtDeclist SEMI
-        if(isEqual( root->child[1]->tag, "ExtDecList") == 1) { // global variables
-            printf("global variables's specifier is %s\n",root->child[0]->tag);
-=======
 void Handle_ExtDef(GramTree* root) {
     if (isEqual( root->tag, "ExtDef") == 1) {   //ExtDef -> Specifier ExtDeclist SEMI
         if(isEqual( root->child[1]->tag, "ExtDecList") == 1) { 
             printf("tag:%s\n",root->child[0]->tag);
->>>>>>> 5555e3f8b0140e85c28a1f1e987007b3641fc982
             Type temp_type = getType(root->child[0]); //get type of specifier
             if(temp_type == NULL) { //不进行插入
                 return; 
@@ -362,13 +311,8 @@ void Analyse(GramTree* root) { //分析函数
         return;
     }
     if(isEqual(root->tag, "ExtDef") == 1){ //ExtDef
-<<<<<<< HEAD
-        printf("---------- Start Insert Into Table ----------\n");
-        Insert_Into_Table(root);
-=======
         printf("originally start Insert into Table\n");
         Handle_ExtDef(root);
->>>>>>> 5555e3f8b0140e85c28a1f1e987007b3641fc982
     } else {
         for(int i = 0; i < count_of_child; i++){ //开始进行分析
             if(root->child[i] != NULL) {
