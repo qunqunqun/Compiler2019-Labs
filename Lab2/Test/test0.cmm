@@ -1,5 +1,10 @@
-int A(int a) {
+struct A{
+	int b;
+};
 
-	float c;
+
+int main(int a) {
+	struct A b;
+	b.b = 1;
 	return c;
 }

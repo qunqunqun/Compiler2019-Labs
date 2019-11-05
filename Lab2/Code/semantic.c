@@ -110,14 +110,14 @@ SymbolElem findFromTable_Struct(char *name) {
 }
 
 SymbolElem findFromTable(char *name){
-    // printf("find name: %s\n",name);
-    // for(int i = Top_of_stack; i >= 0; i--) {
-    //     SymbolElem temp = symbol_Stack[i];
-    //     while(temp != NULL) {
-    //         printf("Symbol in Stack: StackIndex:%d, Name:%s, Type:%d\n",i,temp->name,temp->kind);
-    //         temp = temp->down;
-    //     }
-    // }
+    printf("find name: %s\n",name);
+    for(int i = Top_of_stack; i >= 0; i--) {
+        SymbolElem temp = symbol_Stack[i];
+        while(temp != NULL) {
+            printf("Symbol in Stack: StackIndex:%d, Name:%s, Type:%d\n",i,temp->name,temp->kind);
+            temp = temp->down;
+        }
+    }
 
     unsigned int HashNum = hash_pjw(name);
     SymbolElem res = symbol_HashTable[HashNum];
@@ -484,7 +484,7 @@ Type Handle_Exp(GramTree* root){
             SymbolElem symbol = findFromTable_Struct(root->val.str);
             if(symbol == NULL){
                 //1)  错误类型1：变量在使用时未经定义。
-                printErrorOfSemantic(1,root->lineNo,symbol->name);
+                printErrorOfSemantic(1,root->lineNo,root->val.str);
                 return NULL;
             }else if(symbol->kind == FUNCTION){
                 //11)  错误类型11：对普通变量使用“(…)”或“()”（函数调用）操作符。
@@ -559,11 +559,25 @@ Type Handle_Exp(GramTree* root){
         // | Exp AND Exp
         // | Exp OR Exp
         else if(isEqual(Operand->tag,"AND") || isEqual(Operand->tag,"OR")){
-
+            Type ta = Handle_Exp(a);
+            Type tb = Handle_Exp(b);
+            if(isTypeEqual(ta, tb) == false) {
+                printErrorOfSemantic(7, Operand->lineNo, "");
+                return NULL; 
+            } else {
+                return ta;
+            }
         }
         // | Exp RELOP Exp
         else if(isEqual(Operand->tag,"RELOP")){
-
+            Type ta = Handle_Exp(a);
+            Type tb = Handle_Exp(b);
+            if(isTypeEqual(ta, tb) == false) {
+                printErrorOfSemantic(7, Operand->lineNo, "");
+                return NULL;
+            } else {
+                return ta;
+            }
         }
         // | Exp PLUS Exp
         // | Exp MINUS Exp
@@ -573,25 +587,64 @@ Type Handle_Exp(GramTree* root){
                 ||isEqual(Operand->tag,"MINUS")
                 ||isEqual(Operand->tag,"STAR")
                 ||isEqual(Operand->tag,"DIV")){
-
+            Type ta = Handle_Exp(a);
+            Type tb = Handle_Exp(b);
+            if(isTypeEqual(ta, tb) == false) {
+                printErrorOfSemantic(7, Operand->lineNo, "");
+                return NULL;
+            } else {
+                return ta;
+            }
         }
         // | LP Exp RP
         else if(isEqual(root->child[0]->tag,"LP")
                 &&isEqual(root->child[1]->tag,"Exp")
                 &&isEqual(root->child[2]->tag,"RP")){
             res = Handle_Exp(root->child[1]);
+            return res;
         }
         // | ID LP RP
         else if(isEqual(root->child[0]->tag,"ID")
                 &&isEqual(root->child[1]->tag,"LP")
                 &&isEqual(root->child[2]->tag,"RP")){
-
+            SymbolElem funcDec = findFromTable_Struct(root->child[0]->val.str); //此处调用函数
+            if(funcDec == NULL) {
+                printErrorOfSemantic(2, root->child[0]->lineNo, root->child[0]->val.str);
+                return NULL;
+            } else if(funcDec->kind != FUNCTION){ //error Type 11
+                printErrorOfSemantic(11, root->child[0]->lineNo, root->child[0]->val.str);
+                return NULL;
+            } else {
+                res = funcDec->u.func.retType;
+                return res;
+            }
         }
         // | Exp DOT ID
         else if(isEqual(root->child[0]->tag,"Exp")
                 &&isEqual(root->child[1]->tag,"DOT")
                 &&isEqual(root->child[2]->tag,"ID")){
-
+            Type ta = Handle_Exp(root->child[0]);
+            if(ta == NULL) {    //非结构体变量
+                printErrorOfSemantic(13, root->child[0]->lineNo, root->child[0]->val.str);
+                return NULL;
+            } else if(ta->kind != STRUCTURE) { //非结构体变量
+                printErrorOfSemantic(13, root->child[0]->lineNo, root->child[0]->val.str);
+                return NULL;
+            } else { //查找ID是否再域中
+                FieldList tempField = ta->u.structure;
+                while(tempField != NULL){
+                    if(isEqual(tempField->name, root->child[2]->val.str) == true) {
+                        break;
+                    }
+                }
+                if(tempField == NULL) { //cannt find
+                    printErrorOfSemantic(14, root->child[2]->lineNo, root->child[2]->val.str);
+                    return NULL;
+                } else {
+                    res = tempField->type;
+                    return res;
+                }
+            }
         }else{
             printError("Exp type not Found");assert(0);
         }
@@ -604,7 +657,7 @@ Type Handle_Exp(GramTree* root){
             &&isEqual(root->child[1]->tag,"LP")
             &&isEqual(root->child[2]->tag,"Args")
             &&isEqual(root->child[3]->tag,"RP")){
-
+                
         }
         // | Exp LB Exp RB
         else if(isEqual(root->child[0]->tag,"Exp")
@@ -692,7 +745,6 @@ void Handle_DefList(GramTree* root){
         }
     }
 
-
     printPhase("Handle_DefList() End");
 }
 
@@ -718,11 +770,32 @@ void Handle_Stmt(GramTree* root, Type type){
         }
     } else if(root->nChild == 5) {
         if(isEqual(root->child[0]->tag, "IF") == true) {// Stmt -> IF LP Exp RP Stmt
-
+            //判断 EXP 类型是否是 INT 型变量
+            Type temp = Handle_Exp(root->child[2]);
+            if(temp->kind == BASIC && temp->u.basic == INT_TYPE) {
+                //Right
+            } else {
+                printErrorOfSemantic(9 ,root->child[2]->lineNo, "Exp");
+            }
+            Handle_Stmt(root->child[4], type);
         } else if(isEqual(root->child[0]->tag, "WHILE") == true) { // Stmt -> WHILE LP Exp RP Stmt
-            
+            Type temp = Handle_Exp(root->child[2]);
+            if(temp->kind == BASIC && temp->u.basic == INT_TYPE) {
+                //Right
+            } else {
+                printErrorOfSemantic(9 ,root->child[2]->lineNo, "Exp");
+            }
+            Handle_Stmt(root->child[4], type);
         }
     } else if(root->nChild == 7) { //Stmt -> IF LP Exp RP Stmt ELSE Stmt
+            Type temp = Handle_Exp(root->child[2]);
+            if(temp->kind == BASIC && temp->u.basic == INT_TYPE) {
+                //Right
+            } else {
+                printErrorOfSemantic(9 ,root->child[2]->lineNo, "Exp");
+            }
+            Handle_Stmt(root->child[4], type);
+            Handle_Stmt(root->child[6], type);
 
     } else {
         assert(0);
@@ -843,20 +916,20 @@ void semanticParse(GramTree * root) {
 void printErrorOfSemantic(int error_type, int line_no, char* str) {
     printf("Error type \033[31m %d \033[0m at line \033[31m %d \033[0m: ", error_type, line_no);
     switch(error_type) {
-        // case 1: printf("Undefined variable \"%s\"." , str); break;
-        // case 2: printf("Undefined function \" %s \".", str); break;
+        case 1: printf("Undefined variable \"%s\"." , str); break;
+        case 2: printf("Undefined function \" %s \".", str); break;
         case 3: printf("Redefined variable \" %s \".",str); break;
         case 4: printf("Redefined function \" %s \".",str); break;
         case 5: printf("Type mismatched for assignment."); break;
         case 6: printf("The left-hand side of an assignment must be a variable."); break;
         case 7: printf("Type mismatched for operands."); break;
         case 8: printf("Type mismathced for return."); break;
-        // case 9: printf("Function \" %s \" is not applicable for arguments."); break;
+        case 9: printf("Function \" %s \" is not applicable for arguments.",str); break;
         // case 10: printf(str << " is not an array."); break;
         case 11: printf("\" %s \" is not a function.",str); break;
         // case 12: printf(str << " is not an integer."); break;
-        // case 13: printf("Illegal use of \" %s \"."); break;
-        // case 14: printf("Non-existent field \" %s \"."); break;
+        case 13: printf("Illegal use of \" %s \".",str); break;
+        case 14: printf("Non-existent field \" %s \".",str); break;
         case 15: if (isEqual(str,"struct")==0) printf("Redefined field \" %s \".", str); else printf("Initialize a field of structure."); break;
         case 16: printf("Duplicated name \" %s \".",str); break;
         case 17: printf("Undefined structure\" %s \".",str); break;
