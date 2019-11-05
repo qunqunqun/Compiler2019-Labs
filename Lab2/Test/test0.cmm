@@ -1,11 +1,5 @@
+int A(int a) {
 
-int b;
-float c;
-//float b;
-
-struct A{
-	int a;
-	int b;
-};
-
-struct B d;
+	float c;
+	return c;
+}

@@ -110,6 +110,15 @@ SymbolElem findFromTable_Struct(char *name) {
 }
 
 SymbolElem findFromTable(char *name){
+    // printf("find name: %s\n",name);
+    // for(int i = Top_of_stack; i >= 0; i--) {
+    //     SymbolElem temp = symbol_Stack[i];
+    //     while(temp != NULL) {
+    //         printf("Symbol in Stack: StackIndex:%d, Name:%s, Type:%d\n",i,temp->name,temp->kind);
+    //         temp = temp->down;
+    //     }
+    // }
+
     unsigned int HashNum = hash_pjw(name);
     SymbolElem res = symbol_HashTable[HashNum];
     while(res != NULL) {
@@ -472,7 +481,7 @@ Type Handle_Exp(GramTree* root){
         // | ID
         if(isEqual(root->tag,"ID")){
             free(res);
-            SymbolElem symbol = findFromTable_Struct(root->tag);
+            SymbolElem symbol = findFromTable_Struct(root->val.str);
             if(symbol == NULL){
                 //1)  错误类型1：变量在使用时未经定义。
                 printErrorOfSemantic(1,root->lineNo,symbol->name);
@@ -540,9 +549,12 @@ Type Handle_Exp(GramTree* root){
             Type ta = Handle_Exp(a);
             Type tb = Handle_Exp(b);
             if(ta == NULL || tb == NULL) {
-
+                printErrorOfSemantic(5, Operand->lineNo, "");
+            } else if(isTypeEqual(ta, tb) == false){ 
+                printErrorOfSemantic(5, Operand->lineNo, "");
             }
             CheckLeftAssign(a);
+            return NULL;
         }
         // | Exp AND Exp
         // | Exp OR Exp
@@ -694,8 +706,27 @@ void Handle_Stmt(GramTree* root, Type type){
     // | WHILE LP Exp RP Stmt
     printPhase("Handle_Stmt() Begin");
     printProduction(root);
+    if(root-> nChild == 1) { //Stmt -> CompSt
+        Handle_CompSt(root->child[0], type);
+    } else if(root->nChild == 2) { //Stmt -> Exp SEMI
+        Type temp = Handle_Exp(root->child[0]);
+        return;
+    } else if(root->nChild == 3) { //Stmt -> RETURN Exp SEMI
+        Type temp = Handle_Exp(root->child[1]);
+        if(isTypeEqual(type, temp) == false) {
+            printErrorOfSemantic(8,root->child[0]->lineNo, "");
+        }
+    } else if(root->nChild == 5) {
+        if(isEqual(root->child[0]->tag, "IF") == true) {// Stmt -> IF LP Exp RP Stmt
 
+        } else if(isEqual(root->child[0]->tag, "WHILE") == true) { // Stmt -> WHILE LP Exp RP Stmt
+            
+        }
+    } else if(root->nChild == 7) { //Stmt -> IF LP Exp RP Stmt ELSE Stmt
 
+    } else {
+        assert(0);
+    }
     printPhase("Handle_Stmt() End");
 }
 
@@ -819,7 +850,7 @@ void printErrorOfSemantic(int error_type, int line_no, char* str) {
         case 5: printf("Type mismatched for assignment."); break;
         case 6: printf("The left-hand side of an assignment must be a variable."); break;
         case 7: printf("Type mismatched for operands."); break;
-        // case 8: printf("Type mismathced for return."); break;
+        case 8: printf("Type mismathced for return."); break;
         // case 9: printf("Function \" %s \" is not applicable for arguments."); break;
         // case 10: printf(str << " is not an array."); break;
         case 11: printf("\" %s \" is not a function.",str); break;
