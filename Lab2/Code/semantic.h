@@ -82,9 +82,10 @@ void Clear_TopOf_Stack();   //跳出嵌套
 void insert_Symbol_Table(SymbolElem p); // stackIndex
 SymbolElem findFromTable_Struct(char *name);
 SymbolElem findFromTable(char *name);
+void CheckLeftAssign(GramTree* root); //检查是否是左值表达式
 
 int isTypeEqual(Type a, Type b);
-
+int isFiledListEqual(FieldList a, FieldList b);
 //报错
 void printErrorOfSemantic(int error_type, int line_no, char* str);
 

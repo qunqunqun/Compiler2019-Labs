@@ -386,13 +386,82 @@ SymbolElem Handle_FunDec(GramTree* root){
     return res;
 }
 
-int isTypeEqual(Type a, Type b){
-    return true;
+void CheckLeftAssign(GramTree* root){ //check exp if left assign
+    printPhase("start Check Left Assign");
+    if(isEqual(root->tag, "Exp") == false){ //why
+        assert(0);
+    }
+    if(root->nChild == 1) {
+        if(isEqual(root->child[1]->tag, "ID") == true) {
+            return;//correct; Exp->ID
+        }
+    } else if(root->nChild == 3) {
+        if(isEqual(root->child[1]->tag,"DOT") && isEqual(root->child[2]->tag,"ID")) {
+            return;//correct; Exp->Exp DOT ID
+        }
+    } else if(root->nChild == 4) {
+        if(isEqual(root->child[1]->tag,"LB") && isEqual(root->child[2]->tag,"Exp") && isEqual(root->child[3]->tag,"RB")) {
+            return;//correct; Exp->Exp LB Exp RB
+        }
+    }
+    printErrorOfSemantic(6,root->lineNo,NULL);
+}
+
+int isFiledListEqual(FieldList a, FieldList b){
+    while(a != NULL && b != NULL){
+        if(isTypeEqual(a->type, b->type) == false) {
+            return false;
+        } else {
+            a = a->tail;
+            b = b->tail;
+        }
+    }
+    if(a != NULL || b != NULL) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+int isTypeEqual(Type a, Type b){    //decide if Type is Equal
+    if(a == NULL || b == NULL){    
+        return false;
+    }
+    if(a->kind != b->kind){
+        return false;
+    }
+    //Basic Type
+    if(a->kind == BASIC) {
+        if(a->u.basic != b->u.basic){
+            return false;
+        } else {
+            return true;
+        }
+    }
+    //Array Type
+    if(a->kind == ARRAY) {
+        if(a->u.array.size != b->u.array.size){
+            return false;
+        } else if(isTypeEqual(a->u.array.elem, b->u.array.elem) == false){
+            return false;
+        } else {
+            return true;
+        }
+    }
+    //Struct Type
+    if(a->kind == STRUCTURE) {
+        if(isFiledListEqual(a->u.structure, b->u.structure) == false){
+            return false;
+        } else {
+            return true;
+        }
+    }
+    assert(0);
 }
 
 
 
-Type Handle_Exp(GramTree* root){
+Type Handle_Exp(GramTree* root){ 
     // TODO: Return the type of Exp
     printPhase("Handle_Exp() Begin");
     printProduction(root);    
@@ -407,47 +476,57 @@ Type Handle_Exp(GramTree* root){
             if(symbol == NULL){
                 //1)  错误类型1：变量在使用时未经定义。
                 printErrorOfSemantic(1,root->lineNo,symbol->name);
+                return NULL;
             }else if(symbol->kind == FUNCTION){
                 //11)  错误类型11：对普通变量使用“(…)”或“()”（函数调用）操作符。
                 printErrorOfSemantic(11,root->lineNo,symbol->name);
+                return NULL;
             }else{
                 res = symbol->u.var;
             }
+            return res;
         }
         // | INT
         else if(isEqual(root->tag,"INT")){
             res->kind = BASIC;
             res->u.basic = INT_TYPE;
+            return res;
         }
         // | FLOAT
         else if(isEqual(root->tag,"FLOAT")){
             res->kind = BASIC;
             res->u.basic = FLOAT_TYPE;
+            return res;
         }else{
             printError("Switch in Handle_Exp Case 1");
+            return NULL;
         }
         break;
-    case 2:
-        /* TODO:code */
+    case 2:{
+        /* TODO:code Maybe Finished ???*/
         // | MINUS Exp : -5,-(a+b)
         // | NOT Exp : !
         GramTree* Exp = root->child[1];
         GramTree* Operand = root->child[0];
         assert(isEqual(Exp->tag,"Exp"));
         assert(isEqual(Operand->tag,"MINUS")||isEqual(Operand->tag,"NOT"));
-        Type exp_type = getType(Exp);
+        Type exp_type = Handle_Exp(Exp);
     
         // 7)  错误类型7：操作数类型不匹配或操作数类型与操作符不匹配（例如整型变量与数组变量相加减，或数组（或结构体）变量与数组（或结构体）变量相加减）。
         if(exp_type->kind != BASIC){
             printErrorOfSemantic(7,root->lineNo,Exp->tag);
+            return NULL;
         }else{
             if(isEqual(Operand->tag,"NOT") && exp_type->u.basic != INT_TYPE){
                 printErrorOfSemantic(7,root->lineNo,Exp->tag);
+                return NULL;
+            } else { //如果是基本类型直接返回
+                return exp_type;
             }
         }
-
         break;
-    case 3:
+    }
+    case 3:{
         /* TODO:code */
         GramTree* Operand = root->child[1];
         // NOTE:a and b only suitable for Exp Operand Exp
@@ -457,7 +536,13 @@ Type Handle_Exp(GramTree* root){
         if(isEqual(Operand->tag,"ASSIGNOP")){
             // 5)  错误类型5：赋值号两边的表达式类型不匹配。
             // 6)  错误类型6：赋值号左边出现一个只有右值的表达式。
-            
+            //check error Type 6
+            Type ta = Handle_Exp(a);
+            Type tb = Handle_Exp(b);
+            if(ta == NULL || tb == NULL) {
+
+            }
+            CheckLeftAssign(a);
         }
         // | Exp AND Exp
         // | Exp OR Exp
@@ -498,7 +583,8 @@ Type Handle_Exp(GramTree* root){
         }else{
             printError("Exp type not Found");assert(0);
         }
-        break;    
+        break;
+    }    
     case 4:
         /* TODO:code */
         // | ID LP Args RP
@@ -541,12 +627,14 @@ void Handle_Dec(GramTree* root, Type type){
         if(isTypeEqual(type,type_exp) == false){
             printErrorOfSemantic(5, root->lineNo,"");
         }
-
+        return; //Error and Cannt insert
     }else if (root->nChild == 1){
         // Do nothing
     }else{
         printError("Number conflict"); assert(0);
     }
+    //insert_Into_TABLE
+    insert_Symbol_Table(symbol);
     printPhase("Handle_Dec() End");
 }
 
@@ -570,7 +658,7 @@ void Handle_Def(GramTree* root){
     //Def -> Specifier DecList SEMI
     printPhase("Handle_Def() Begin");
     printProduction(root);
-    assert(root->lineNo == 3);
+    //assert(root->lineNo == 3);
     Type type = getType(root->child[0]);
     Handle_DecList(root->child[1],type);
     printPhase("Handle_Def() End");
@@ -580,7 +668,7 @@ void Handle_DefList(GramTree* root){
     //DefList -> Def DefList | empty
     printPhase("Handle_DefList() Begin");
     printProduction(root);
-    if(root->nChild == 0){
+    if(root->nChild == 0){ //Empty
         return;
     }
     while(root->nChild == 2){
@@ -683,9 +771,9 @@ void Handle_ExtDef(GramTree* root) {
             }else{
                 res->u.func.complete = false;
             }
-
-            insert_Symbol_Table(res);
             Clear_TopOf_Stack();
+            insert_Symbol_Table(res);
+        
         } else if(isEqual( root->child[1]->tag, "SEMI") == 1) { //special for STRUCT
             getType(root->child[0]);
             // TODO: Complete this function
@@ -729,12 +817,12 @@ void printErrorOfSemantic(int error_type, int line_no, char* str) {
         case 3: printf("Redefined variable \" %s \".",str); break;
         case 4: printf("Redefined function \" %s \".",str); break;
         case 5: printf("Type mismatched for assignment."); break;
-        // case 6: printf("The left-hand side of an assignment must be a variable."); break;
+        case 6: printf("The left-hand side of an assignment must be a variable."); break;
         case 7: printf("Type mismatched for operands."); break;
         // case 8: printf("Type mismathced for return."); break;
         // case 9: printf("Function \" %s \" is not applicable for arguments."); break;
         // case 10: printf(str << " is not an array."); break;
-        case 11: printf("\" %s \" is not a function."); break;
+        case 11: printf("\" %s \" is not a function.",str); break;
         // case 12: printf(str << " is not an integer."); break;
         // case 13: printf("Illegal use of \" %s \"."); break;
         // case 14: printf("Non-existent field \" %s \"."); break;
