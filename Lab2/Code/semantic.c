@@ -405,8 +405,10 @@ Type Handle_Exp(GramTree* root){
             free(res);
             SymbolElem symbol = findFromTable_Struct(root->tag);
             if(symbol == NULL){
+                //1)  错误类型1：变量在使用时未经定义。
                 printErrorOfSemantic(1,root->lineNo,symbol->name);
             }else if(symbol->kind == FUNCTION){
+                //11)  错误类型11：对普通变量使用“(…)”或“()”（函数调用）操作符。
                 printErrorOfSemantic(11,root->lineNo,symbol->name);
             }else{
                 res = symbol->u.var;
@@ -427,31 +429,94 @@ Type Handle_Exp(GramTree* root){
         break;
     case 2:
         /* TODO:code */
-        // | MINUS Exp
-        // | NOT Exp
+        // | MINUS Exp : -5,-(a+b)
+        // | NOT Exp : !
+        GramTree* Exp = root->child[1];
+        GramTree* Operand = root->child[0];
+        assert(isEqual(Exp->tag,"Exp"));
+        assert(isEqual(Operand->tag,"MINUS")||isEqual(Operand->tag,"NOT"));
+        Type exp_type = getType(Exp);
+    
+        // 7)  错误类型7：操作数类型不匹配或操作数类型与操作符不匹配（例如整型变量与数组变量相加减，或数组（或结构体）变量与数组（或结构体）变量相加减）。
+        if(exp_type->kind != BASIC){
+            printErrorOfSemantic(7,root->lineNo,Exp->tag);
+        }else{
+            if(isEqual(Operand->tag,"NOT") && exp_type->u.basic != INT_TYPE){
+                printErrorOfSemantic(7,root->lineNo,Exp->tag);
+            }
+        }
 
         break;
     case 3:
         /* TODO:code */
+        GramTree* Operand = root->child[1];
+        // NOTE:a and b only suitable for Exp Operand Exp
+        GramTree* a = root->child[0];
+        GramTree* b = root->child[2];
         // Exp -> Exp ASSIGNOP Exp
-
+        if(isEqual(Operand->tag,"ASSIGNOP")){
+            // 5)  错误类型5：赋值号两边的表达式类型不匹配。
+            // 6)  错误类型6：赋值号左边出现一个只有右值的表达式。
+            
+        }
         // | Exp AND Exp
         // | Exp OR Exp
+        else if(isEqual(Operand->tag,"AND") || isEqual(Operand->tag,"OR")){
+
+        }
         // | Exp RELOP Exp
+        else if(isEqual(Operand->tag,"RELOP")){
+
+        }
         // | Exp PLUS Exp
         // | Exp MINUS Exp
         // | Exp STAR Exp
         // | Exp DIV Exp
+        else if(isEqual(Operand->tag,"PLUS")
+                ||isEqual(Operand->tag,"MINUS")
+                ||isEqual(Operand->tag,"STAR")
+                ||isEqual(Operand->tag,"DIV")){
 
+        }
         // | LP Exp RP
+        else if(isEqual(root->child[0]->tag,"LP")
+                &&isEqual(root->child[1]->tag,"Exp")
+                &&isEqual(root->child[2]->tag,"RP")){
+            res = Handle_Exp(root->child[1]);
+        }
         // | ID LP RP
+        else if(isEqual(root->child[0]->tag,"ID")
+                &&isEqual(root->child[1]->tag,"LP")
+                &&isEqual(root->child[2]->tag,"RP")){
+
+        }
         // | Exp DOT ID
+        else if(isEqual(root->child[0]->tag,"Exp")
+                &&isEqual(root->child[1]->tag,"DOT")
+                &&isEqual(root->child[2]->tag,"ID")){
+
+        }else{
+            printError("Exp type not Found");assert(0);
+        }
         break;    
     case 4:
         /* TODO:code */
         // | ID LP Args RP
-        // | Exp LB Exp RB
+        if(isEqual(root->child[0]->tag,"ID")
+            &&isEqual(root->child[1]->tag,"LP")
+            &&isEqual(root->child[2]->tag,"Args")
+            &&isEqual(root->child[3]->tag,"RP")){
 
+        }
+        // | Exp LB Exp RB
+        else if(isEqual(root->child[0]->tag,"Exp")
+                &&isEqual(root->child[1]->tag,"LB")
+                &&isEqual(root->child[2]->tag,"Exp")
+                &&isEqual(root->child[3]->tag,"RB")){
+
+        }else{
+            printError("Exp type not Found");assert(0);
+        }
         break;    
     default:
         printError("Switch in Handle_Exp");
@@ -663,13 +728,13 @@ void printErrorOfSemantic(int error_type, int line_no, char* str) {
         // case 2: printf("Undefined function \" %s \".", str); break;
         case 3: printf("Redefined variable \" %s \".",str); break;
         case 4: printf("Redefined function \" %s \".",str); break;
-        // case 5: printf("Type mismatched for assignment."); break;
+        case 5: printf("Type mismatched for assignment."); break;
         // case 6: printf("The left-hand side of an assignment must be a variable."); break;
-        // case 7: printf("Type mismatched for operands."); break;
+        case 7: printf("Type mismatched for operands."); break;
         // case 8: printf("Type mismathced for return."); break;
         // case 9: printf("Function \" %s \" is not applicable for arguments."); break;
         // case 10: printf(str << " is not an array."); break;
-        // case 11: printf("\" %s \" is not a function."); break;
+        case 11: printf("\" %s \" is not a function."); break;
         // case 12: printf(str << " is not an integer."); break;
         // case 13: printf("Illegal use of \" %s \"."); break;
         // case 14: printf("Non-existent field \" %s \"."); break;
