@@ -56,10 +56,12 @@ void semantic_Init();
 void semanticParse(GramTree* root);     //semantic parser
 
 //处理函数
+
 SymbolElem Handle_VarDec(GramTree* h, Type type); //进行处理变量的符号表定义
 void Handle_ExtDef(GramTree* root);
 SymbolElem Handle_FunDec(GramTree* root);
 void Handle_CompSt(GramTree* root, Type type);
+FieldList Handle_Args(GramTree* root);
 FieldList Handle_VarList(GramTree* root);
 void Handle_DefList(GramTree* root);
 void Handle_Def(GramTree* root);

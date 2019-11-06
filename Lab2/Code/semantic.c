@@ -378,7 +378,7 @@ SymbolElem Handle_FunDec(GramTree* root){
     SymbolElem res = malloc(sizeof(symElemsize));
 
     // Initialize res
-    strcpy(res->name,root->child[0]->tag);
+    strcpy(res->name,root->child[0]->val.str);
     res->lineNo = root->lineNo;
     res->kind = FUNCTION;
     res->down = NULL;
@@ -397,11 +397,12 @@ SymbolElem Handle_FunDec(GramTree* root){
 
 void CheckLeftAssign(GramTree* root){ //check exp if left assign
     printPhase("start Check Left Assign");
+    printProduction(root);
     if(isEqual(root->tag, "Exp") == false){ //why
         assert(0);
     }
     if(root->nChild == 1) {
-        if(isEqual(root->child[1]->tag, "ID") == true) {
+        if(isEqual(root->child[0]->tag, "ID") == true) {
             return;//correct; Exp->ID
         }
     } else if(root->nChild == 3) {
@@ -413,6 +414,7 @@ void CheckLeftAssign(GramTree* root){ //check exp if left assign
             return;//correct; Exp->Exp LB Exp RB
         }
     }
+    printPhase("start Check Left Assign");
     printErrorOfSemantic(6,root->lineNo,NULL);
 }
 
@@ -653,17 +655,54 @@ Type Handle_Exp(GramTree* root){
     case 4:
         /* TODO:code */
         // | ID LP Args RP
-        if(isEqual(root->child[0]->tag,"ID")
+        if(isEqual(root->child[0]->tag,"ID") //function
             &&isEqual(root->child[1]->tag,"LP")
             &&isEqual(root->child[2]->tag,"Args")
             &&isEqual(root->child[3]->tag,"RP")){
-                
+            SymbolElem t = findFromTable_Struct(root->child[0]->val.str); //find Name
+            if(t == NULL) {
+                printErrorOfSemantic(2, root->child[0]->lineNo, root->child[0]->val.str);
+                return NULL;
+            } else if(t->kind != FUNCTION) {
+                printErrorOfSemantic(11, root->child[0]->lineNo, root->child[0]->val.str);
+                return NULL;
+            }
+            FieldList funcField = t->u.func.varList;
+            FieldList fieldFromArgs = Handle_Args(root->child[2]);
+            if(isFiledListEqual(funcField, fieldFromArgs) == false) {
+                printErrorOfSemantic(9, root->child[0]->lineNo, root->child[0]->val.str);
+                return NULL;
+            }
+            res = funcField->type;
+            return res; //没有问题进行返回
         }
         // | Exp LB Exp RB
         else if(isEqual(root->child[0]->tag,"Exp")
                 &&isEqual(root->child[1]->tag,"LB")
                 &&isEqual(root->child[2]->tag,"Exp")
                 &&isEqual(root->child[3]->tag,"RB")){
+            Type ta = Handle_Exp(root->child[0]);
+            if(ta->kind != ARRAY) { //非类型数组
+                printErrorOfSemantic(10, root->child[0]->lineNo,root->child[0]->child[0]->val.str);
+                return NULL;
+            } else{
+                Type tb = Handle_Exp(root->child[2]);
+                if(tb == NULL) {
+                    printErrorOfSemantic(12, root->child[2]->lineNo,root->child[2]->val.str);
+                    return NULL;
+                } else {
+                    if(tb->kind != BASIC) {
+                        printErrorOfSemantic(12, root->child[2]->lineNo,root->child[2]->val.str);
+                        return NULL;
+                    } else if(tb->u.basic != INT_TYPE) {
+                        printErrorOfSemantic(12, root->child[2]->lineNo,root->child[2]->val.str);
+                        return NULL;
+                    } else {
+                        res = ta;
+                        return ta;
+                    }
+                }
+            }
 
         }else{
             printError("Exp type not Found");assert(0);
@@ -673,11 +712,33 @@ Type Handle_Exp(GramTree* root){
         printError("Switch in Handle_Exp");
         break;
     }
-
+    assert(0);
     printPhase("Handle_Exp() End");
     return res;
 }
 
+FieldList Handle_Args(GramTree* root) {
+    GramTree* p = root;
+    FieldList varList = NULL, tail;
+    while (p != NULL) {
+        FieldList cur = malloc(sizeof(FieldListsize));
+        cur->tail = NULL;
+        cur->type = Handle_Exp(p->child[0]);
+        cur->name = malloc(sizeof(char) * 30);
+        strcpy(cur->name, p->val.str);
+        if (varList == NULL){
+            varList = cur;
+        }else{
+            tail->tail = cur;
+        }
+        tail = cur;
+        if (p->nChild == 3)
+            p = p->child[2];
+        else
+            p = NULL;
+    }
+    return varList;
+}
 
 void Handle_Dec(GramTree* root, Type type){
     //Dec -> VarDec | VarDec ASSIGNOP Exp
@@ -691,8 +752,8 @@ void Handle_Dec(GramTree* root, Type type){
         type_exp = Handle_Exp(root->child[2]);
         if(isTypeEqual(type,type_exp) == false){
             printErrorOfSemantic(5, root->lineNo,"");
+            return; //Error and Cannt insert
         }
-        return; //Error and Cannt insert
     }else if (root->nChild == 1){
         // Do nothing
     }else{
@@ -775,7 +836,7 @@ void Handle_Stmt(GramTree* root, Type type){
             if(temp->kind == BASIC && temp->u.basic == INT_TYPE) {
                 //Right
             } else {
-                printErrorOfSemantic(9 ,root->child[2]->lineNo, "Exp");
+                printErrorOfSemantic(7 ,root->child[2]->lineNo, "");
             }
             Handle_Stmt(root->child[4], type);
         } else if(isEqual(root->child[0]->tag, "WHILE") == true) { // Stmt -> WHILE LP Exp RP Stmt
@@ -783,7 +844,7 @@ void Handle_Stmt(GramTree* root, Type type){
             if(temp->kind == BASIC && temp->u.basic == INT_TYPE) {
                 //Right
             } else {
-                printErrorOfSemantic(9 ,root->child[2]->lineNo, "Exp");
+                printErrorOfSemantic(7 ,root->child[2]->lineNo, "");
             }
             Handle_Stmt(root->child[4], type);
         }
@@ -792,7 +853,7 @@ void Handle_Stmt(GramTree* root, Type type){
             if(temp->kind == BASIC && temp->u.basic == INT_TYPE) {
                 //Right
             } else {
-                printErrorOfSemantic(9 ,root->child[2]->lineNo, "Exp");
+                printErrorOfSemantic(7 ,root->child[2]->lineNo, "");
             }
             Handle_Stmt(root->child[4], type);
             Handle_Stmt(root->child[6], type);
@@ -925,11 +986,11 @@ void printErrorOfSemantic(int error_type, int line_no, char* str) {
         case 7: printf("Type mismatched for operands."); break;
         case 8: printf("Type mismathced for return."); break;
         case 9: printf("Function \" %s \" is not applicable for arguments.",str); break;
-        // case 10: printf(str << " is not an array."); break;
+        case 10: printf("\"%s\" is not an array.",str); break;
         case 11: printf("\" %s \" is not a function.",str); break;
-        // case 12: printf(str << " is not an integer."); break;
-        case 13: printf("Illegal use of \" %s \".",str); break;
-        case 14: printf("Non-existent field \" %s \".",str); break;
+        case 12: printf("\" %s \" is not an integer.",str); break;
+        case 13: printf("Illegal use of \".\" .",str); break;
+        case 14: printf("Non-existent field \" %s \" .",str); break;
         case 15: if (isEqual(str,"struct")==0) printf("Redefined field \" %s \".", str); else printf("Initialize a field of structure."); break;
         case 16: printf("Duplicated name \" %s \".",str); break;
         case 17: printf("Undefined structure\" %s \".",str); break;
