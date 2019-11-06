@@ -1,5 +1,13 @@
-float function()
+int func(int i)
 {
-	float a = 12.34e.-4;
-	float b = .e;
+    return i;
+}
+
+int func()
+{
+    return 0;
+}
+
+int main()
+{
 }

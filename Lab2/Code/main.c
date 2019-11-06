@@ -24,7 +24,7 @@ int main(int argc, char ** argv){
 	yyparse();
 	fclose(f);
 	if( ErrorFlag == 0){
-		printGramTree(treeRoot,0);	//if has no error test senamatic
+		// printGramTree(treeRoot,0);	//if has no error test senamatic
 		printPhase("Grammar Tree Printf End");
 		semanticParse(treeRoot);
 	}

@@ -1,9 +1,9 @@
-struct Complex
+struct Position
 {
-    float real, image;
+    float x, y;
+    int x;
 };
+
 int main()
 {
-    struct Complex x;
-    y.image = 3.5;
 }
