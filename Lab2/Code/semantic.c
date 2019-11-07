@@ -238,6 +238,7 @@ FieldList getFieldList(GramTree* root) { //DefList
             defList = NULL;
         }
     }
+    return head;
 }
 
 Type getType(GramTree* root) { //返回节点的Type
@@ -265,6 +266,7 @@ Type getType(GramTree* root) { //返回节点的Type
             strcpy(temp->u.structure->name,p->child[1]->child[0]->val.str);
             temp->u.structure->type = NULL;
             temp->u.structure->tail = getFieldList(p->child[3]);    //得到域
+            // temp->u.structure = getFieldList(p->child[3]);    //得到域
             //定义结束之后回退栈
             Clear_TopOf_Stack();
             //插入进符号表中
