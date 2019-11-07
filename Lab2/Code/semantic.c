@@ -87,6 +87,7 @@ int isEqual(char *a, char *b) {
 //处理规则函数
 SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插入操作
     printPhase("Handle_VarDec() Start");
+    printProduction(root);
     SymbolElem res = NULL;
     if (root->nChild == 4) { // VarDec ->VarDec LB INT RB 数组
         Type newType = malloc(sizeof(Typesize)); 
@@ -180,6 +181,7 @@ void Clear_TopOf_Stack() { //将最顶层进行清理
 }
 
 FieldList getFieldList(GramTree* root) { //DefList
+    printPhase("getFieldList");
     FieldList temp = malloc(sizeof(FieldListsize));
     FieldList head = NULL, tailer;
     GramTree* defList = root;
@@ -212,7 +214,7 @@ FieldList getFieldList(GramTree* root) { //DefList
                         temp_F = malloc(sizeof(FieldListsize));
                         temp_F->name = (char*)malloc(sizeof(char)*30);
                         strcpy(temp_F->name, temp_Symbol->name);
-                        temp_F->type = tempType;
+                        temp_F->type = temp_Symbol->u.var;
                         temp_F->tail = NULL;
                         if(head == NULL) {
                             head = temp_F;
@@ -315,6 +317,7 @@ void insert_Symbol_Table(SymbolElem p) {
     SymbolElem t = symbol_Stack[Top_of_stack]; //头元素
     //插入之前需要检查重定义，也就是名字重复
     while(t != NULL) {
+        // myPrintf("in stack, symbol.Name = %s\n",t->name);
         if(isEqual(t->name, p->name) == 1 && p-> kind == VAR_ELEMENT) {
             printErrorOfSemantic(3, p->lineNo, p->name); //error 3 redefine var
             return;
@@ -329,8 +332,26 @@ void insert_Symbol_Table(SymbolElem p) {
         }
         t = t->down;
     }
+    
     //No conflict and insert
     unsigned int hashIndex = hash_pjw(p->name);
+    t = symbol_HashTable[hashIndex];
+    while(t != NULL) {
+        if(isEqual(t->name, p->name) == 1 && p-> kind == VAR_ELEMENT && t->kind != VAR_ELEMENT) {
+            printErrorOfSemantic(3, p->lineNo, p->name); //error 3 redefine var
+            return;
+        }
+        if(isEqual(t->name, p->name) == 1 && p-> kind == FUNCTION) {
+            printErrorOfSemantic(4, p->lineNo, p->name); //error 3 redefine Function
+            return;
+        }
+        if(isEqual(t->name, p->name) == 1 && p-> kind == STRUCTURE_ELEMENT) {
+            printErrorOfSemantic(16, p->lineNo, p->name); //error 3 redefine Struct
+            return;
+        }
+        t = t->down;
+    }
+
 
     if(symbol_HashTable[hashIndex] == NULL) {
         symbol_HashTable[hashIndex] = p;
@@ -550,6 +571,10 @@ Type Handle_Exp(GramTree* root){
         assert(isEqual(Exp->tag,"Exp"));
         assert(isEqual(Operand->tag,"MINUS")||isEqual(Operand->tag,"NOT"));
         Type exp_type = Handle_Exp(Exp);
+        if(exp_type == NULL){
+            printErrorOfSemantic(7,root->lineNo,Exp->tag);
+            return NULL;
+        }
     
         // 7)  错误类型7：操作数类型不匹配或操作数类型与操作符不匹配（例如整型变量与数组变量相加减，或数组（或结构体）变量与数组（或结构体）变量相加减）。
         if(exp_type->kind != BASIC){
@@ -704,7 +729,7 @@ Type Handle_Exp(GramTree* root){
                 printErrorOfSemantic(9, root->child[0]->lineNo, root->child[0]->val.str);
                 return NULL;
             }
-            res = funcField->type;
+            res = t->u.var;
             return res; //没有问题进行返回
         }
         // | Exp LB Exp RB
@@ -713,6 +738,10 @@ Type Handle_Exp(GramTree* root){
                 &&isEqual(root->child[2]->tag,"Exp")
                 &&isEqual(root->child[3]->tag,"RB")){
             Type ta = Handle_Exp(root->child[0]);
+            if(ta == NULL){
+                printErrorOfSemantic(10, root->child[0]->lineNo,root->child[0]->child[0]->val.str);
+                return NULL;
+            }
             if(ta->kind != ARRAY) { //非类型数组
                 printErrorOfSemantic(10, root->child[0]->lineNo,root->child[0]->child[0]->val.str);
                 return NULL;
@@ -729,8 +758,8 @@ Type Handle_Exp(GramTree* root){
                         printErrorOfSemantic(12, root->child[2]->lineNo,root->child[2]->val.str);
                         return NULL;
                     } else {
-                        res = ta;
-                        return ta;
+                        res = ta->u.array.elem;
+                        return res;
                     }
                 }
             }
@@ -801,7 +830,7 @@ void Handle_DecList(GramTree* root, Type type){
     printProduction(root);
     while(root != NULL){
         Handle_Dec(root->child[0],type);
-        if(root->lineNo == 3){
+        if(root->nChild == 3){
             root = root->child[2];
         }else{
             break;
@@ -873,7 +902,10 @@ void Handle_Stmt(GramTree* root, Type type){
             } else {
                 printErrorOfSemantic(7 ,root->child[2]->lineNo, "");
             }
+            Top_of_stack++;
+            symbol_Stack[Top_of_stack] = NULL;
             Handle_Stmt(root->child[4], type);
+            Clear_TopOf_Stack();
         } else if(isEqual(root->child[0]->tag, "WHILE") == true) { // Stmt -> WHILE LP Exp RP Stmt
             Type temp = Handle_Exp(root->child[2]);
             if(temp->kind == BASIC && temp->u.basic == INT_TYPE) {
@@ -881,7 +913,10 @@ void Handle_Stmt(GramTree* root, Type type){
             } else {
                 printErrorOfSemantic(7 ,root->child[2]->lineNo, "");
             }
+            Top_of_stack++;
+            symbol_Stack[Top_of_stack] = NULL;
             Handle_Stmt(root->child[4], type);
+            Clear_TopOf_Stack();
         }
     } else if(root->nChild == 7) { //Stmt -> IF LP Exp RP Stmt ELSE Stmt
             Type temp = Handle_Exp(root->child[2]);
@@ -890,8 +925,14 @@ void Handle_Stmt(GramTree* root, Type type){
             } else {
                 printErrorOfSemantic(7 ,root->child[2]->lineNo, "");
             }
+            Top_of_stack++;
+            symbol_Stack[Top_of_stack] = NULL;
             Handle_Stmt(root->child[4], type);
+            Clear_TopOf_Stack();
+            Top_of_stack++;
+            symbol_Stack[Top_of_stack] = NULL;
             Handle_Stmt(root->child[6], type);
+            Clear_TopOf_Stack();
 
     } else {
         assert(0);
