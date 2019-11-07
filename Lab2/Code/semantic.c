@@ -866,7 +866,7 @@ void Handle_Stmt(GramTree* root, Type type){
             Type temp = Handle_Exp(root->child[2]);
             if(temp==NULL){
                 //TODO : return error,segmentation fault
-                printError("4");
+                return;
             }
             if(temp->kind == BASIC && temp->u.basic == INT_TYPE) {
                 //Right

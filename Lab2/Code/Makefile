@@ -74,7 +74,7 @@ test:
 	./parser ../Test/test11.cmm
 	./parser ../Test/test12.cmm
 	./parser ../Test/test13.cmm
-	# ./parser ../Test/test14.cmm
+	./parser ../Test/test14.cmm
 	./parser ../Test/test15.cmm
 	./parser ../Test/test16.cmm
 	./parser ../Test/test17.cmm

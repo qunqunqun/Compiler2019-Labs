@@ -98,6 +98,7 @@ ParamDec: Specifier VarDec                      { $$ = newTreeNode("ParamDec", 2
 /* Statements */
 CompSt: LC DefList StmtList RC                  { $$ = newTreeNode("CompSt", 4, $1, $2, $3, $4);}
     | error RC                                  { $$ = newTreeNode("CompSt", 2, $1, $2); ErrorFlag = 1; /*errorTypeB("Syntax error");*/}
+    | SEMI                                      { $$ = newTreeNode("CompSt", 1, $1); ErrorFlag = 1; errorTypeB("Syntax error"); }
     ;
 
 StmtList: Stmt StmtList                         { $$ = newTreeNode("StmtList", 2, $1, $2);}
