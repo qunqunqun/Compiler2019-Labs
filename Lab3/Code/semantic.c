@@ -63,6 +63,7 @@ void semantic_Init(){ //初始化函数
     }
     //初始化栈顶
     Top_of_stack++;
+	defineReadWriteFunc();
 }
 
 unsigned int hash_pjw(char* name) {     //hash函数
@@ -83,6 +84,38 @@ int isEqual(char *a, char *b) {
         return 0;
     }
 }
+
+//  增加对Lab3的read()和write()函数的支持
+void defineReadWriteFunc(){
+    
+	//返回类型int型
+	Type  intType = malloc(sizeof(Typesize));
+	intType->kind = BASIC;
+	intType->u.basic = INT_TYPE;
+
+	//插入read()到符号表里
+	SymbolElem s[2];
+	char* name[2] = { "read", "write" };
+
+	for(int i=0;i<2;i++){
+		s[i] = malloc(sizeof(symElemsize));
+		strcpy(s[i]->name,name[i]);
+		s[i]->lineNo = 0;
+		s[i]->kind = FUNCTION;
+		s[i]->down = NULL;
+		s[i]->right = NULL;
+		s[i]->u.func.complete = 1;
+		s[i]->u.func.retType = intType;
+		s[i]->u.func.varList = NULL;
+		if(i==1){
+			    s[i]->u.func.varList = malloc(sizeof(FieldListsize));
+    			s[i]->u.func.varList->type = intType;	
+		}
+		insert_Symbol_Table(s[i]);
+	}
+
+}
+
 
 //处理规则函数
 SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插入操作

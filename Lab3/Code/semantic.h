@@ -86,6 +86,10 @@ SymbolElem findFromTable_Struct(char *name);
 SymbolElem findFromTable(char *name);
 void CheckLeftAssign(GramTree* root); //检查是否是左值表达式
 
+// Lab3 对于Code和符号支持
+void defineReadWriteFunc();
+
+// 判断函数
 int isTypeEqual(Type a, Type b);
 int isFiledListEqual(FieldList a, FieldList b);
 //报错
