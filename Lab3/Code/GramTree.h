@@ -13,6 +13,8 @@ typedef struct TreeNode
     } val;
     int lineNo;			//TempLineNumber
 	int nChild;			//Number of children
+    int symbolIndex;
+    int typeIndex;
 	struct TreeNode *child[MAX_CHILD];
 
 } GramTree;

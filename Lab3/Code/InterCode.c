@@ -72,7 +72,8 @@ InterCodes translate_VarDec(GramTree* root){
         root = root->child[0];
     }
     // 此时Root指向var了
-    Operand op = getVar(root->child[0]->val.a); //FIXME:写到这里就知道有问题了
+    Operand op = getVar(root->child[0]->symbolIndex); //FIXME:写到这里就知道有问题了
+    // TODO: 当前进度到这里
 }
 
 
