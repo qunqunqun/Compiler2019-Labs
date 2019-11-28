@@ -87,22 +87,29 @@ InterCodes translate_Def(GramTree* root);
 InterCodes translate_DecList(GramTree* root);
 InterCodes translate_Dec(GramTree* root);
 InterCodes translate_Exp(GramTree* root, Operand* place);
-
+InterCodes translate_Stmt(GramTree* root);
+InterCodes translate_Cond(GramTree*root, int label1, int label2);
 
 // get函数
 InterCodes getFuncCodes(GramTree* root);
 Operand getVar(int value, int isAddr); 
 InterCodes getParamCode(Operand op);
 InterCodes getDecCode(Operand op, int decSize);
-InterCodes getAssignCode(Operand op1, Operand op2, int opKind);
-
+InterCodes getASSIGNOPCode(Operand op1, Operand op2, int opKind);
+InterCodes getReturnCode(Operand op);
+InterCodes getLabelCode(int label);
+InterCodes getGotoCode(int label);
 // 工具人函数
 void printInterCodes(InterCodes codes);
 void printInterCode(InterCode code);
 char* getOperand(Operand op, int opKind);
 char* getName(Operand op);
 int getTypeSize(Type type);
+int getFieldListSize(FieldList fieldList);
+int getNewLabel();
 // 中间代码的连接
 InterCodes link2Codes(InterCodes c1, InterCodes c2);
 InterCodes link3Codes(InterCodes c1, InterCodes c2, InterCodes c3);
 InterCodes link4Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4);
+InterCodes link5Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5);
+InterCodes link6Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5, InterCodes c6);

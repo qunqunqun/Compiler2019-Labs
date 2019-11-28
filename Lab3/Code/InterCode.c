@@ -1,5 +1,6 @@
 #include "InterCode.h"
 
+int globalLabelIndex = -1;
 
 // translate函数
 void translateTree(GramTree * root){
@@ -141,8 +142,24 @@ InterCodes translate_Dec(GramTree* root){
 
 int getTypeSize(Type type){
     //TODO
+    if(type->kind == BASIC){
+        return 4;
+    }else if(type->kind == ARRAY){
+        return type->u.array.size * getTypeSize(type->u.array.elem);
+    }else{
+        return getFieldListSize(type->u.structure);
+    }
     return 0;
 }
+
+int getFieldListSize(FieldList fieldList){
+    if(fieldList == NULL){
+        return 0;
+    } else{
+        return getTypeSize(fieldList->type) + getFieldListSize(fieldList->tail);
+    }
+}
+
 
 InterCodes translate_Exp(GramTree* root, Operand* place){
     //TODO
@@ -152,8 +169,92 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
 
 
 InterCodes translate_StmtList(GramTree* root){
+    // TODO:empty的话会有几个子节点？
+    if(root->nChild == 0 || root->nChild == 1){
+        printf("translate_StmtList nChild= %d\n",root->nChild);
+        return NULL;
+    }else{
+        return link2Codes(
+            translate_Stmt(root->child[0]),
+            translate_StmtList(root->child[1]));
+    }
+}
+
+InterCodes translate_Stmt(GramTree* root){
+    // TODO: Complete this function
+    if(root-> nChild == 1) { //Stmt -> CompSt
+        return translate_CompSt(root->child[0]);
+    } else if(root->nChild == 2) { //Stmt -> Exp SEMI
+        return translate_Exp(root->child[0],  NULL);
+    } else if(root->nChild == 3) { //Stmt -> RETURN Exp SEMI
+        Operand op;
+        InterCodes ExpCodes = translate_Exp(root->child[0], &op);
+        InterCodes returnCodes = getReturnCode(op);
+        return link2Codes(ExpCodes, returnCodes);
+    } else if(root->nChild == 5) {
+        if(isEqual(root->child[0]->tag, "IF") == true) {// Stmt -> IF LP Exp RP Stmt
+            int label1 = getNewLabel();
+            int label2 = getNewLabel();
+            InterCodes condCodes = translate_Cond(root->child[2], label1, label2);
+            InterCodes labelCodes1 = getLabelCode(label1);
+            InterCodes labelCodes2 = getLabelCode(label2);
+            InterCodes StmtCodes = translate_Stmt(root->child[4]);
+            return link4Codes(
+                condCodes,
+                labelCodes1,
+                labelCodes2,
+                StmtCodes
+            );
+
+        } else if(isEqual(root->child[0]->tag, "WHILE") == true) { // Stmt -> WHILE LP Exp RP Stmt
+            int label1 = getNewLabel();
+            int label2 = getNewLabel();
+            int label3 = getNewLabel();
+            InterCodes condCodes = translate_Cond(root->child[2], label2, label3);
+            InterCodes StmtCodes = translate_Stmt(root->child[4]);
+            InterCodes labelCodes1 = getLabelCode(label1);
+            InterCodes labelCodes2 = getLabelCode(label2);
+            InterCodes labelCodes3 = getLabelCode(label3);
+            InterCodes gotoCodes = getGotoCode(label1);
+            return link6Codes(
+                labelCodes1,
+                condCodes,
+                labelCodes2,
+                StmtCodes,
+                gotoCodes,
+                labelCodes3
+            );
+        }else{
+            assert(0);
+        }
+    } else if(root->nChild == 7) { //Stmt -> IF LP Exp RP Stmt ELSE Stmt
+            int label1 = getNewLabel();
+            int label2 = getNewLabel();
+            int label3 = getNewLabel();
+            InterCodes condCodes = translate_Cond(root->child[2], label1, label2);
+            InterCodes StmtCodes1 = translate_Stmt(root->child[4]);
+            InterCodes StmtCodes2 = translate_Stmt(root->child[6]);
+            InterCodes labelCodes1 = getLabelCode(label1);
+            InterCodes labelCodes2 = getLabelCode(label2);
+            InterCodes labelCodes3 = getLabelCode(label3);
+            InterCodes gotoCodes = getGotoCode(label3);
+            return link6Codes(
+                condCodes,
+                labelCodes1,
+                StmtCodes1,
+                gotoCodes,
+                StmtCodes2,
+                labelCodes3
+            );
+    } else {
+        assert(0);
+    }
+}
+
+InterCodes translate_Cond(GramTree*root, int label1, int label2){
 
 }
+
 
 // get函数
 InterCodes getFuncCodes(GramTree* root){
@@ -181,7 +282,22 @@ InterCodes getDecCode(Operand op, int decSize){
     return NULL;
 }
 
-InterCodes getAssignCode(Operand op1, Operand op2, int opKind){
+InterCodes getASSIGNOPCode(Operand op1, Operand op2, int opKind){
+    // TODO:
+    return NULL;
+}
+
+InterCodes getReturnCode(Operand op){
+    // TODO:
+    return NULL;
+}
+
+InterCodes getLabelCode(int label){
+    // TODO:
+    return NULL;
+}
+
+InterCodes getGotoCode(int label){
     // TODO:
     return NULL;
 }
@@ -212,6 +328,16 @@ InterCodes link4Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4
     return link2Codes(c1, link3Codes(c2, c3, c4));
 }
 
+InterCodes link5Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5){
+    return link2Codes( link2Codes(c1, c2), link3Codes(c3, c4, c5));
+}
+
+InterCodes link6Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5, InterCodes c6){
+    return link2Codes( link3Codes(c1, c2, c3), link3Codes(c4, c5, c6));
+}
+
+
+// 工具人函数
 // TODO: 双向循环链表头尾实现的时候接起来吗,如果首尾相接，则需要防止死循环——回答，是的。
 void printInterCodes(InterCodes codes){
     InterCodes p = codes;
@@ -236,6 +362,11 @@ char* getOperand(Operand op, int opKind){
 char* getName(Operand op){
     char* opName = "fakeName_in_getName()"; // = =随便写个虚假的
     return opName;
+}
+
+int getNewLabel(){
+    globalLabelIndex++;
+    return globalLabelIndex;
 }
 
 
