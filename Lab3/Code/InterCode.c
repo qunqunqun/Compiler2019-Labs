@@ -835,8 +835,31 @@ char* getOperand(Operand op, int opKind){
     if(op == NULL){
         printError("getOperand:op == NULL");
     }
-    
     char* opName = getName(op);
+    char* ret = malloc(30);
+    switch (opKind)
+    {
+    case ADDR_OP:
+        if(op->kind == VARIABLE && op->isAddr == ADDR_OP){
+            char tmp[20] = "&";
+            strcat(tmp, opName);
+            strcpy(ret, tmp);
+            return ret;
+        }
+        break;
+    case VAL_OP:
+        if(op->isAddr == VAL_OP){
+            char tmp[20] = "*";
+            strcat(tmp, opName);
+            strcpy(ret, tmp);
+            return ret;
+        }
+        break;
+    default:
+        printError("Error");
+        break;
+    }
+
     return opName;
 }
 
