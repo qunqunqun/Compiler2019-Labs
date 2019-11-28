@@ -528,69 +528,143 @@ InterCodes translate_Cond(GramTree*root, int label_true, int label_false){
 }
 
 // get函数
+InterCodes getNewInterCodes(){
+    InterCodes codes = malloc(sizeof(InterCodesBody));
+    codes->code = malloc(sizeof(InterCodeBody));
+    codes->prev = codes->next = codes;
+    return codes;
+}
+
 InterCodes getFuncCodes(GramTree* root){
-    // TODO:
-    return NULL;
+    InterCodes funID = getNewInterCodes();
+    funID->code->kind = FUNC_IR;
+    funID->code->u.single.funcName = root->val.str;
+    funID->code->opKind = VAL_OP;
+    return funID;
 }
 
 InterCodes getParamCode(Operand op){
-    // TODO:
-    return NULL;
+    // ParamDec -> Specifier VarDec
+    // VarDec -> ID，此时的op指向ID
+    InterCodes paramID = getNewInterCodes();
+    paramID->code->kind = PARAM_IR;
+    paramID->code->u.single.op = op;
+    paramID->code->opKind = VAL_OP;
+    return paramID;
 }
 
 InterCodes getDecCode(Operand op, int decSize){
-    // TODO:
-    return NULL;
+    // Dec -> VarDec
+    // VarDec -> ID，此时的op指向ID
+    InterCodes decID = getNewInterCodes();
+    decID->code->kind = DEC_IR;
+    decID->code->u.dec.op = op;
+    decID->code->u.dec.decSize = decSize;
+    decID->code->opKind = VAL_OP;
+    return decID;
 }
 
 InterCodes getAssignopCode(Operand op1, Operand op2, int opKind){
-    // TODO:
-    return NULL;
+    InterCodes assignCodes = getNewInterCodes();
+    assignCodes->code->kind = ASSIGN_IR;
+    assignCodes->code->u.assign.left = op1;
+    assignCodes->code->u.assign.left = op2;
+    assignCodes->code->opKind = opKind;
+    return assignCodes;
 }
 
 InterCodes getReturnCode(Operand op){
-    // TODO:
-    return NULL;
+    InterCodes retCodes = getNewInterCodes();
+    retCodes->code->kind = RETURN_IR;
+    retCodes->code->u.single.op = op;
+    retCodes->code->opKind = VAL_OP;
+    return retCodes;
 }
 
 InterCodes getLabelCode(int label){
-    // TODO:
-    return NULL;
+    InterCodes labelCodes = getNewInterCodes();
+    labelCodes->code->kind = LABLE_IR;
+    labelCodes->code->labelNo = label;
+    labelCodes->code->opKind = VAL_OP;
+    return labelCodes;
 }
 
 InterCodes getGotoCode(int label){
-    // TODO:
-    return NULL;
+    InterCodes gotoCodes = getNewInterCodes();
+    gotoCodes->code->kind = GOTO_IR;
+    gotoCodes->code->labelNo = label;
+    gotoCodes->code->opKind = VAL_OP;
+    return gotoCodes;
 }
 
 InterCodes getRelopCode(char* relopType, Operand op1, Operand op2, int label){
-    //TODO
-    return NULL;
+    InterCodes relopCodes = getNewInterCodes();
+    relopCodes->code->kind = RELOP_IR;
+    relopCodes->code->u.relop.relopType = relopType;
+    relopCodes->code->u.relop.x = op1;
+    relopCodes->code->u.relop.y = op2;
+    relopCodes->code->u.relop.label = label;
+    relopCodes->code->labelNo = label;
+    relopCodes->code->opKind = VAL_OP;
+    return relopCodes;
 }
 
-InterCodes getArithCodes(char* arithType, Operand op1, Operand op2, Operand op3, int opKind){
-    //TODO
-    return NULL;  
+InterCodes getArithCodes(char* arithType, Operand result, Operand op1, Operand op2, int opKind){
+    //getArithCodes
+    char opType;
+    if(isEqual(arithType, "PLUS")){
+        opType = '+';
+    }else if(isEqual(arithType, "MINUS")){
+        opType = '-';
+    }else if(isEqual(arithType, "STAR")){
+        opType = '*';
+    }else if(isEqual(arithType, "DIV")){
+        opType = '/';
+    }else{
+        printf("arithType = %s\n", arithType);
+        assert(0);
+    }
+    InterCodes arithCodes = getNewInterCodes();
+    arithCodes->code->kind = ARITH_IR;
+    arithCodes->code->u.binop.arithType = opType;
+    arithCodes->code->u.binop.result = result;
+    arithCodes->code->u.binop.op1 = op1;
+    arithCodes->code->u.binop.op2 = op2;
+    arithCodes->code->opKind = opKind;
+    return arithCodes;  
 }
 
 InterCodes getReadCodes(Operand op){
-    //TODO
-    return NULL;  
+    InterCodes readCodes = getNewInterCodes();
+    readCodes->code->kind = READ_IR;
+    readCodes->code->u.single.op = op;
+    readCodes->code->opKind = VAL_OP;
+    return readCodes;  
 }
 
 InterCodes getCallCodes(Operand op, char* funcName){
-    //TODO
-    return NULL;  
+    InterCodes callCodes = getNewInterCodes();
+    callCodes->code->kind = CALL_IR;
+    callCodes->code->u.single.op = op;
+    callCodes->code->u.single.funcName = funcName;
+    callCodes->code->opKind = VAL_OP;
+    return callCodes;
 }
 
 InterCodes getWriteCodes(Operand op){
-    //TODO
-    return NULL;  
+    InterCodes writeCodes = getNewInterCodes();
+    writeCodes->code->kind = WRITE_IR;
+    writeCodes->code->u.single.op = op;
+    writeCodes->code->opKind = VAL_OP;
+    return writeCodes;  
 }
 
 InterCodes getArgCodes(Operand op, int opKind){
-    //TODO
-    return NULL;      
+    InterCodes argCodes = getNewInterCodes();
+    argCodes->code->kind = ARG_IR;
+    argCodes->code->u.single.op = op;
+    argCodes->code->opKind = opKind;
+    return argCodes;       
 }
 
 

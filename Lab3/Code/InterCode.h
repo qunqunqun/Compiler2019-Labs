@@ -48,7 +48,7 @@ typedef struct InterCode_{
         //  DEC x [size]
         struct { Operand op; int decSize;} dec;  
         //  好像只有这个：IF x [relop] y GOTO z
-        struct { Operand x,y; char* relopType;} relop;
+        struct { Operand x,y; char* relopType; int label;} relop;
     } u;
     int labelNo;    //有label，才有这个    
     int opKind;
@@ -92,6 +92,7 @@ InterCodes translate_Cond(GramTree*root, int label_true, int label_false);
 InterCodes translate_Args(GramTree* root, ArgList* arglist);
 
 // get函数
+InterCodes getNewInterCodes();
 InterCodes getFuncCodes(GramTree* root);
 InterCodes getParamCode(Operand op);
 InterCodes getDecCode(Operand op, int decSize);
@@ -100,7 +101,7 @@ InterCodes getReturnCode(Operand op);
 InterCodes getLabelCode(int label);
 InterCodes getGotoCode(int label);
 InterCodes getRelopCode(char* relopType, Operand op1, Operand op2, int label);
-InterCodes getArithCodes(char* arithType, Operand op1, Operand op2, Operand op3, int opKind);
+InterCodes getArithCodes(char* arithType, Operand result, Operand op1, Operand op2, int opKind);
 InterCodes getReadCodes(Operand op);
 InterCodes getCallCodes(Operand op, char* funcName);
 InterCodes getWriteCodes(Operand op);

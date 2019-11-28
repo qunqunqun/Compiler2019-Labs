@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include "common.h"
 #include "semantic.h"
+#include "InterCode.h"
 
 extern FILE* yyin;
 extern int yylex();
@@ -27,6 +28,7 @@ int main(int argc, char ** argv){
 		// printGramTree(treeRoot,0);	//if has no error test senamatic
 		printPhase("Grammar Tree Printf End");
 		semanticParse(treeRoot);
+		translateTree(treeRoot);
 	}
 	return 0;
 }
