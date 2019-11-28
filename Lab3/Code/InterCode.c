@@ -48,10 +48,6 @@ InterCodes translate_FunDec(GramTree* root){
 
 }
 
-InterCodes translate_CompSt(GramTree* root){
-
-}
-
 InterCodes translate_VarList(GramTree* root){
     InterCodes paramDecCodes = translate_ParamDec(root->child[0]);
     if(root->nChild == 1){
@@ -64,21 +60,100 @@ InterCodes translate_VarList(GramTree* root){
 }
 
 InterCodes translate_ParamDec(GramTree* root){
-    return translate_VarDec(root->child[0]);
+    return translate_VarDec(root->child[1]);
 }
 
 InterCodes translate_VarDec(GramTree* root){
     while(root->nChild == 4){
         root = root->child[0];
     }
-    // 此时Root指向var了
-    Operand op = getVar(root->child[0]->symIndex); //FIXME:写到这里就知道有问题了
-    // TODO: 当前进度到这里
+    // 此时root指向var了,root->child[0]就是ID
+    int isAddr = true;
+    Operand op = getVar(root->child[0]->symIndex, isAddr); //FIXME:写到这里就知道有问题了
+    return getParamCode(op);
+}
+
+InterCodes translate_CompSt(GramTree* root){
+    GramTree* defList = root->child[1];
+    GramTree* stmtList = root->child[2];
+    return link2Codes(translate_DefList(defList),translate_StmtList(stmtList));
+}
+
+InterCodes translate_DefList(GramTree* root){
+    // TODO:empty的话会有几个子节点？
+    if(root->nChild == 0 || root->nChild == 1){
+        printf("translate_DefList nChild= %d\n",root->nChild);
+        return NULL;
+    }else if(root->nChild == 2){
+        return link2Codes(
+            translate_Def(root->child[0]),
+            translate_DefList(root->child[1]));
+    }else{
+        assert(0);
+    }
+}
+
+InterCodes translate_Def(GramTree* root){
+    return translate_DecList(root->child[1]);
+}
+
+InterCodes translate_DecList(GramTree* root){
+    InterCodes decCodes = translate_Dec(root->child[0]);
+    if(root->nChild == 1){
+        return decCodes;
+    }else{
+        return link2Codes(decCodes, translate_DecList(root->child[2]));
+    }
+}
+
+InterCodes translate_Dec(GramTree* root){
+    GramTree* p = root->child[0];
+    // 向下找到ID所在节点
+    while(p->nChild == 4){
+        p = p->child[0];
+    }
+    
+    SymbolElem symbol = findFromList(p->symIndex);
+
+    InterCodes c1 = NULL;
+    InterCodes c2 = NULL;
+
+    if(symbol->u.var->kind != BASIC){
+        int isAddr = true;
+        Operand op = getVar(p->symIndex, isAddr);
+        c1 = getDecCode(op, getTypeSize(symbol->u.var));
+    }
+
+    // TODO: 读懂这里什么意思
+    if(root->nChild == 3){
+        int isAddr = false;
+        Operand var = getVar(p->symIndex, isAddr);
+        Operand op;
+        InterCodes ExpCodes = translate_Exp(root->child[2], &op);
+        InterCode ASSIGNOPCodes = getASSIGNOPCode(var, op, VAL_OP);
+        // TODO: 检查连接的顺序问题
+        c2 = link2Codes(ExpCodes, ASSIGNOPCodes);
+    }
+
+    return link2Codes(c1,c2);
+
+}
+
+int getTypeSize(Type type){
+    //TODO
+    return 0;
+}
+
+InterCodes translate_Exp(GramTree* root, Operand* place){
+    //TODO
+    return NULL;
 }
 
 
 
+InterCodes translate_StmtList(GramTree* root){
 
+}
 
 // get函数
 InterCodes getFuncCodes(GramTree* root){
@@ -86,13 +161,30 @@ InterCodes getFuncCodes(GramTree* root){
     return NULL;
 }
 
+
 // TODO:还不知道怎么写才好，先随便写一个
-Operand getVar(int value){
+Operand getVar(int value, int isAddr){
     Operand op = malloc(sizeof(OperandBody));
     op->kind = VARIABLE;
     op->u.value = value;
+    op->isAddr = isAddr;
     return op;
 } 
+
+InterCodes getParamCode(Operand op){
+    // TODO:
+    return NULL;
+}
+
+InterCodes getDecCode(Operand op, int decSize){
+    // TODO:
+    return NULL;
+}
+
+InterCodes getAssignCode(Operand op1, Operand op2, int opKind){
+    // TODO:
+    return NULL;
+}
 
 
 // 中间代码的连接
@@ -140,6 +232,7 @@ char* getOperand(Operand op, int opKind){
     return opName;
 }
 
+// TODO:函数需要完善
 char* getName(Operand op){
     char* opName = "fakeName_in_getName()"; // = =随便写个虚假的
     return opName;

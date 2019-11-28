@@ -11,6 +11,7 @@ typedef struct Operand_ {
         int var_no;
         int value;
     } u;
+    int isAddr;
 }OperandBody;
 
 
@@ -80,16 +81,27 @@ InterCodes translate_CompSt(GramTree* root);
 InterCodes translate_VarList(GramTree* root);
 InterCodes translate_ParamDec(GramTree* root);
 InterCodes translate_VarDec(GramTree* root);
+InterCodes translate_DefList(GramTree* root);
+InterCodes translate_StmtList(GramTree* root);
+InterCodes translate_Def(GramTree* root);
+InterCodes translate_DecList(GramTree* root);
+InterCodes translate_Dec(GramTree* root);
+InterCodes translate_Exp(GramTree* root, Operand* place);
+
 
 // get函数
 InterCodes getFuncCodes(GramTree* root);
-Operand getVar(int value); 
+Operand getVar(int value, int isAddr); 
+InterCodes getParamCode(Operand op);
+InterCodes getDecCode(Operand op, int decSize);
+InterCodes getAssignCode(Operand op1, Operand op2, int opKind);
+
 // 工具人函数
 void printInterCodes(InterCodes codes);
 void printInterCode(InterCode code);
 char* getOperand(Operand op, int opKind);
 char* getName(Operand op);
-
+int getTypeSize(Type type);
 // 中间代码的连接
 InterCodes link2Codes(InterCodes c1, InterCodes c2);
 InterCodes link3Codes(InterCodes c1, InterCodes c2, InterCodes c3);
