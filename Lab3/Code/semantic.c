@@ -410,6 +410,7 @@ void insert_Symbol_Table(SymbolElem p) {
     }
     
     if(p->kind == VAR_ELEMENT){
+        // printf("insert_symbol_List %s\n",p->name);
         p->symIndex = insert_symbol_List(p);
     }
 
