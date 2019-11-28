@@ -40,6 +40,7 @@ struct SymbolElem_ {
     int lineNo;
     enum { VAR_ELEMENT, FUNCTION, STRUCTURE_ELEMENT } kind; //三种类型定义
     int symIndex;
+    int isParam;
     union {
         Type var;   //存储 VAR 和 STRUCTURE
         struct { 

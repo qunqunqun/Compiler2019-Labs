@@ -163,110 +163,98 @@ int getFieldListSize(FieldList fieldList){
 
 InterCodes translate_Exp(GramTree* root, Operand* place){
     //FIXME:这块太多了，慢慢写，先把框架搭一下
-    switch (root->nChild){
-    case 1:
+    int n = root->nChild;
+    if(n==1){
         root = root->child[0];
         // | ID
         if(isEqual(root->tag,"ID")){
-           
+        SymbolElem symbol = findFromList(root->symIndex);
+        int isAddr = false;
+        if(symbol->u.var->kind != BASIC && symbol->isParam == true){
+            isAddr = true;
+        }
+            if(place != NULL){
+                *place = getVar(root->symIndex, isAddr);
+            }
+            return NULL;
         }
         // | INT
         else if(isEqual(root->tag,"INT")){
-
+            int value = root->val.a;
+            if(place != NULL){
+                *place = getConst(value);
+            }
+            return NULL;
         }
         // | FLOAT
         else if(isEqual(root->tag,"FLOAT")){
-            
+            // Lab3假设不会出现浮点数常数
+            assert(0);
         }else{
             printError("Switch in Handle_Exp Case 1");
-            return NULL;
+            assert(0);
         }
-        break;
-    case 2:{
-        /* TODO:code Maybe Finished ???*/
-        // | MINUS Exp : -5,-(a+b)
-        // | NOT Exp : !
-        GramTree* Exp = root->child[1];
-        GramTree* Operand = root->child[0];
-        assert(isEqual(Exp->tag,"Exp"));
-        assert(isEqual(Operand->tag,"MINUS")||isEqual(Operand->tag,"NOT"));    
-        
-        break;
-    }
-    case 3:{
-        /* TODO:code */
-        GramTree* Operand = root->child[1];
-        // NOTE:a and b only suitable for Exp Operand Exp
-        GramTree* a = root->child[0];
-        GramTree* b = root->child[2];
+    }else if( n==3 && isEqual(root->child[1]->tag,"ASSIGNOP")){
         // Exp -> Exp ASSIGNOP Exp
-        if(isEqual(Operand->tag,"ASSIGNOP")){
+        // TODO:
+        return NULL;
+    }else if( n==3 && isEqual(root->child[1]->tag,"PLUS")){
+        // Exp -> Exp PLUS Exp
+        // TODO:
+        return NULL;        
+    }else if( n==2 && isEqual(root->child[0]->tag,"MINUS")){
+        // Exp -> MINUS Exp
+        // TODO:
+        return NULL;        
+    }else if(
+            isEqual(root->child[1]->tag,"RELOP") || // | Exp RELOP Exp
+            isEqual(root->child[0]->tag,"NOT") ||   // | NOT Exp
+            isEqual(root->child[1]->tag,"AND") ||   // | Exp AND Exp
+            isEqual(root->child[1]->tag,"OR")){    // | Exp OR Exp
+        
+        // TODO:
+        return NULL;  
 
-        }
-        // | Exp AND Exp
-        // | Exp OR Exp
-        else if(isEqual(Operand->tag,"AND") || isEqual(Operand->tag,"OR")){
-          
-        }
-        // | Exp RELOP Exp
-        else if(isEqual(Operand->tag,"RELOP")){
-           
-        }
-        // | Exp PLUS Exp
-        // | Exp MINUS Exp
-        // | Exp STAR Exp
-        // | Exp DIV Exp
-        else if(isEqual(Operand->tag,"PLUS")
-                ||isEqual(Operand->tag,"MINUS")
-                ||isEqual(Operand->tag,"STAR")
-                ||isEqual(Operand->tag,"DIV")){
-
-        }
-        // | LP Exp RP
-        else if(isEqual(root->child[0]->tag,"LP")
-                &&isEqual(root->child[1]->tag,"Exp")
-                &&isEqual(root->child[2]->tag,"RP")){
-
-        }
+    }else if(
+            isEqual(root->child[0]->tag,"LP")&&
+            isEqual(root->child[1]->tag,"Exp")&&
+            isEqual(root->child[2]->tag,"RP")){
+        // LP Exp RP    
+        return translate_Exp(root->child[1], place);            
+    }else if(
+            isEqual(root->child[0]->tag,"Exp")&& //数组的处理
+            isEqual(root->child[1]->tag,"LB")&&  
+            isEqual(root->child[2]->tag,"Exp")&&
+            isEqual(root->child[3]->tag,"RB")){
+        // Exp LB Exp RB        
+        // TODO:
+        return NULL; 
+    }else if(
+            isEqual(root->child[0]->tag,"Exp")&& //结构体的处理
+            isEqual(root->child[1]->tag,"DOT")&&
+            isEqual(root->child[2]->tag,"ID")){
+        // TODO:
+        return NULL;
+    }else if(
+            isEqual(root->child[0]->tag,"ID")&& //函数的处理
+            isEqual(root->child[1]->tag,"LP")&&
+            isEqual(root->child[2]->tag,"RP")){
         // | ID LP RP
-        else if(isEqual(root->child[0]->tag,"ID")
-                &&isEqual(root->child[1]->tag,"LP")
-                &&isEqual(root->child[2]->tag,"RP")){
-            
-        }
-        // | Exp DOT ID
-        else if(isEqual(root->child[0]->tag,"Exp")
-                &&isEqual(root->child[1]->tag,"DOT")
-                &&isEqual(root->child[2]->tag,"ID")){
-
-        }else{
-            printError("Exp type not Found");assert(0);
-        }
-        break;
-    }    
-    case 4:
-        /* TODO:code */
+        // TODO:
+        return NULL;
+    }else if(
+            isEqual(root->child[0]->tag,"ID")&& //函数的处理
+            isEqual(root->child[1]->tag,"LP")&&
+            isEqual(root->child[2]->tag,"Args")&&
+            isEqual(root->child[3]->tag,"RP")){
         // | ID LP Args RP
-        if(isEqual(root->child[0]->tag,"ID") //function
-            &&isEqual(root->child[1]->tag,"LP")
-            &&isEqual(root->child[2]->tag,"Args")
-            &&isEqual(root->child[3]->tag,"RP")){
-            
-        }
-        // | Exp LB Exp RB
-        else if(isEqual(root->child[0]->tag,"Exp")
-                &&isEqual(root->child[1]->tag,"LB")
-                &&isEqual(root->child[2]->tag,"Exp")
-                &&isEqual(root->child[3]->tag,"RB")){
-            
-        }else{
-            printError("Exp type not Found");assert(0);
-        }
-        break;    
-    default:
-        printError("Switch in Handle_Exp");
-        break;
-    }
+        // TODO:
+        return NULL;
+    }else{
+        printProduction(root);
+        assert(0);
+    }   
+
 }
 
 

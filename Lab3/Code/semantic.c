@@ -233,6 +233,7 @@ FieldList getFieldList(GramTree* root) { //DefList
             while(decList != NULL) {    //DecList -> Dec | Dec COMMA DecList
                 GramTree* Dec = decList->child[0];
                 SymbolElem temp_Symbol = Handle_VarDec(Dec->child[0], tempType); //获得符号定义，下一步进行插入
+                temp_Symbol->isParam = false;
                 if(Dec->nChild == 3) { 
                     //Dec -> VarDec ASSOGNOP EXP 结构体内不能初始化
                     printErrorOfSemantic(15,Dec->child[2]->lineNo,Dec->child[2]->val.str); //ASSIGN
@@ -443,6 +444,7 @@ FieldList Handle_VarList(GramTree* root){
         char *s1 = malloc(sizeof(symbol->name));
         strcpy(s1,symbol->name);
         var->name = s1;
+        symbol->isParam = true;
         if(res == NULL){
             res = var;
             tail = var;
@@ -879,6 +881,7 @@ void Handle_Dec(GramTree* root, Type type){
     printProduction(root);
     SymbolElem symbol = NULL;
     symbol = Handle_VarDec(root->child[0], type);
+    symbol->isParam = false;
     if(root->nChild == 3){
         // TODO: compare type between VarDec and Exp
         Type type_exp = malloc(sizeof(Typesize));
@@ -1061,6 +1064,7 @@ void Handle_ExtDef(GramTree* root) {
             while(t != NULL) {
                 GramTree* curVarDec = t->child[0];  //VarDec
                 SymbolElem res = Handle_VarDec(curVarDec, temp_type);
+                res->isParam = false;
                 insert_Symbol_Table(res);
                 int n = t->nChild;
                 if(n == 1) {        //DecList -> Dec
