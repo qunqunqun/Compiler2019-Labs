@@ -3,7 +3,7 @@
 int globalLabelIndex = -1;
 int globalTempIndex = -1;
 
-int is_iPrint = false;
+int is_iPrint = true;
 //工具人函数
 void iPrintPhase(char * msg){
     return;
@@ -222,14 +222,18 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         root = root->child[0];
         // | ID
         if(isEqual(root->tag,"ID")){
-        SymbolElem symbol = findFromList(root->symIndex);
-        int isAddr = false;
-        if(symbol->u.var->kind != BASIC && symbol->isParam == true){
-            isAddr = true;
-        }
+            SymbolElem symbol = findFromList(root->symIndex);
+            int isAddr = false;
+            if(symbol->u.var->kind != BASIC && symbol->isParam == true){
+                isAddr = true;
+            }
             if(place != NULL){
                 *place = getVar(root->symIndex, isAddr);
+                iPrintf("op->kind = %d\n", (*place)->kind);
+                iPrintf("op->u.value = %d\n", (*place)->u.value);
+                iPrintf("op->isAddr = %d\n", (*place)->isAddr);
             }
+            
             return NULL;
         }
         // | INT
@@ -252,10 +256,14 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
     }else if( n==3 && isEqual(root->child[1]->tag,"ASSIGNOP")){
         // Exp -> Exp ASSIGNOP Exp
         // TODO: TO Be Check Here
-        Operand t1;
-        Operand t2;
+        Operand t1 = malloc(sizeof(OperandBody));
+        Operand t2 = malloc(sizeof(OperandBody));
+        printError("257");
         InterCodes ExpCodes1 = translate_Exp(root->child[0], &t1);
+        assert(t1 == NULL);
         InterCodes ExpCodes2 = translate_Exp(root->child[2], &t2);
+        assert(t2 == NULL);
+        printError("259");
         InterCodes asCodes = getAssignopCode(t1,t2,VAL_OP);
         return link3Codes(ExpCodes1,ExpCodes2,asCodes);
 
@@ -375,14 +383,18 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
             isEqual(root->child[2]->tag,"RP")){
         // | ID LP RP
         char * funcName = root->child[0]->val.str;
-        if(place != NULL){
-            *place = getTemp(0);
-        }
+        Operand res = getTemp(0);
         InterCodes codes;
         if(isEqual(funcName,"read") == true){
-            return getReadCodes(*place);
+            if(place != NULL){
+                *place = res;
+            }
+            return getReadCodes(res);
         }else{
-            return getCallCodes(*place, funcName);
+            if(place != NULL){
+                *place = res;
+            }
+            return getCallCodes(res, funcName);
         }
         return NULL;
     }else if(
@@ -629,6 +641,10 @@ InterCodes getDecCode(Operand op, int decSize){
 }
 
 InterCodes getAssignopCode(Operand op1, Operand op2, int opKind){
+    
+    assert(op1 == NULL);
+    assert(op2 == NULL);
+
     InterCodes assignCodes = getNewInterCodes();
     assignCodes->code->kind = ASSIGN_IR;
     assignCodes->code->u.assign.left = op1;
@@ -778,7 +794,7 @@ void printInterCodes(InterCodes codes){
             p = p->next;
         }
     }
-
+    iPrintf("---------------------------------------------\n");
 }
 
 Operand getVar(int value, int isAddr){
@@ -808,14 +824,36 @@ Operand getTemp(int isAddr){
 
 
 // TODO:函数需要完善
+/*
+    变量 v
+    立即数 #
+    临时变量 t1
+*/
 char* getOperand(Operand op, int opKind){
-    char* opName = "fakeOpName_in_getOperand"; // = =随便写个虚假的
+    if(op == NULL){
+        printError("getOperand:op == NULL");
+    }
+    
+    char* opName = getName(op);
     return opName;
 }
 
-// TODO:函数需要完善
+// FIXME:函数需要Check
 char* getName(Operand op){
-    char* opName = "fakeName_in_getName()"; // = =随便写个虚假的
+   if(op == NULL){
+        printError("getName:op == NULL");
+    }    
+    char* opName = malloc(20);  //开足够的空间，不然strcat段错误
+    switch (op->kind){
+        case VARIABLE: strcpy(opName,"v"); break;
+        case TEMP: opName = strcpy(opName,"t"); break;
+        case CONSTANT: opName = strcpy(opName,"#"); break;
+    default:
+        break;
+    }
+    char index[30];
+    sprintf(index, "%d" , op->u.value);
+    strcat(opName, index);
     return opName;
 }
 
@@ -835,6 +873,8 @@ void printInterCode(InterCode code){
             printf("FUNCTION %s :\n", code->u.single.funcName);
             break;
         case ASSIGN_IR:
+            assert(code->u.assign.left == NULL);
+            assert(code->u.assign.right == NULL);
             printf("%s := %s\n", getOperand(code->u.assign.left, code->opKind), getOperand(code->u.assign.right, code->opKind));
             break;
         case ARITH_IR:
