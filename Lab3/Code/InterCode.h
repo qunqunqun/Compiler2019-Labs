@@ -6,7 +6,7 @@ enum { ADDR_OP, VAL_OP } ;
 // 操作数
 typedef struct Operand_* Operand; 
 typedef struct Operand_ {
-    enum { VARIABLE, CONSTANT, ADDRESS } kind;
+    enum { VARIABLE, CONSTANT, TEMP, ADDRESS } kind;
     union {
         int var_no;
         int value;
@@ -89,20 +89,29 @@ InterCodes translate_Dec(GramTree* root);
 InterCodes translate_Exp(GramTree* root, Operand* place);
 InterCodes translate_Stmt(GramTree* root);
 InterCodes translate_Cond(GramTree*root, int label_true, int label_false);
+InterCodes translate_Args(GramTree* root, ArgList* arglist);
+
 // get函数
 InterCodes getFuncCodes(GramTree* root);
 InterCodes getParamCode(Operand op);
 InterCodes getDecCode(Operand op, int decSize);
-InterCodes getASSIGNOPCode(Operand op1, Operand op2, int opKind);
+InterCodes getAssignopCode(Operand op1, Operand op2, int opKind);
 InterCodes getReturnCode(Operand op);
 InterCodes getLabelCode(int label);
 InterCodes getGotoCode(int label);
 InterCodes getRelopCode(char* relopType, Operand op1, Operand op2, int label);
+InterCodes getArithCodes(char* arithType, Operand op1, Operand op2, Operand op3, int opKind);
+InterCodes getReadCodes(Operand op);
+InterCodes getCallCodes(Operand op, char* funcName);
+InterCodes getWriteCodes(Operand op);
+InterCodes getArgCodes(Operand op, int opKind);
+
 // 工具人函数
 void printInterCodes(InterCodes codes);
 void printInterCode(InterCode code);
 Operand getVar(int value, int isAddr); 
 Operand getConst(int value);
+Operand getTemp(int isAddr);
 char* getOperand(Operand op, int opKind);
 char* getName(Operand op);
 int getTypeSize(Type type);

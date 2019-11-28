@@ -1,6 +1,7 @@
 #include "InterCode.h"
 
 int globalLabelIndex = -1;
+int globalTempIndex = -1;
 
 // translate函数
 void translateTree(GramTree * root){
@@ -131,7 +132,7 @@ InterCodes translate_Dec(GramTree* root){
         Operand var = getVar(p->symIndex, isAddr);
         Operand op;
         InterCodes ExpCodes = translate_Exp(root->child[2], &op);
-        InterCodes ASSIGNOPCodes = getASSIGNOPCode(var, op, VAL_OP);
+        InterCodes ASSIGNOPCodes = getAssignopCode(var, op, VAL_OP);
         // TODO: 检查连接的顺序问题
         c2 = link2Codes(ExpCodes, ASSIGNOPCodes);
     }
@@ -194,26 +195,66 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
             printError("Switch in Handle_Exp Case 1");
             assert(0);
         }
+
     }else if( n==3 && isEqual(root->child[1]->tag,"ASSIGNOP")){
         // Exp -> Exp ASSIGNOP Exp
-        // TODO:
-        return NULL;
-    }else if( n==3 && isEqual(root->child[1]->tag,"PLUS")){
-        // Exp -> Exp PLUS Exp
-        // TODO:
-        return NULL;        
+        // TODO: TO Be Check Here
+        Operand t1;
+        Operand t2;
+        InterCodes ExpCodes1 = translate_Exp(root->child[0], &t1);
+        InterCodes ExpCodes2 = translate_Exp(root->child[2], &t2);
+        InterCodes asCodes = getAssignopCode(t1,t2,VAL_OP);
+        return link3Codes(ExpCodes1,ExpCodes2,asCodes);
+
+    }
+    else if( n==3 && (   
+                isEqual(root->child[1]->tag,"PLUS")||
+                isEqual(root->child[1]->tag,"MINUS")||
+                isEqual(root->child[1]->tag,"STAR")||
+                isEqual(root->child[1]->tag,"DIV"))){
+        Operand t1;
+        Operand t2;
+        InterCodes ExpCodes1 = translate_Exp(root->child[0], &t1);
+        InterCodes ExpCodes2 = translate_Exp(root->child[2], &t2);
+        InterCodes arithCodes = getArithCodes(root->child[1]->tag, *place, t1, t2, VAL_OP);
+        return link3Codes(ExpCodes1,ExpCodes2,arithCodes);
+
     }else if( n==2 && isEqual(root->child[0]->tag,"MINUS")){
         // Exp -> MINUS Exp
-        // TODO:
-        return NULL;        
+        Operand t1;
+        InterCodes code1 = translate_Exp(root->child[1], &t1);
+
+        // TODO: Check HERE
+        if(t1->isAddr == CONSTANT){
+            t1->u.value = 0 - t1->u.value;
+            if( place != NULL){
+                *place = t1;
+            }
+            return NULL;
+        }
+
+        *place = getTemp(false);
+        Operand zero = getConst(0);
+        InterCodes code2 = getArithCodes("MINUS",*place,zero,t1, VAL_OP);
+        return link2Codes(code1, code2);  
+
     }else if(
             isEqual(root->child[1]->tag,"RELOP") || // | Exp RELOP Exp
             isEqual(root->child[0]->tag,"NOT") ||   // | NOT Exp
             isEqual(root->child[1]->tag,"AND") ||   // | Exp AND Exp
             isEqual(root->child[1]->tag,"OR")){    // | Exp OR Exp
         
-        // TODO:
-        return NULL;  
+        int label1 = getNewLabel();
+        int label2 = getNewLabel();
+        Operand t0 = getConst(0);
+        Operand t1 = getConst(1);
+        InterCodes code0 = getAssignopCode(*place, t0, VAL_OP);
+        InterCodes code1 = translate_Cond(root, label1, label2);
+        InterCodes code2 = link2Codes(
+                                getLabelCode(label1), 
+                                getAssignopCode(*place, t1, VAL_OP));
+
+        return link4Codes(code0, code1, code2, getLabelCode(label2));
 
     }else if(
             isEqual(root->child[0]->tag,"LP")&&
@@ -227,20 +268,69 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
             isEqual(root->child[2]->tag,"Exp")&&
             isEqual(root->child[3]->tag,"RB")){
         // Exp LB Exp RB        
-        // TODO:
-        return NULL; 
+        Operand base;   //基址
+        Operand number; //数组大小
+        InterCodes code1 = translate_Exp(root->child[0], &base);
+        InterCodes code2 = translate_Exp(root->child[2], &number);
+
+        Type type = findExpTypeFromList(root->child[0]->typeIndex);
+        int size = getTypeSize(type->u.array.elem); //当作一维，数组的元素大小
+        
+        int isAddr = false; //临时变量代表地址还是值
+        Operand offset = getTemp(isAddr);   //相对于基址的偏移量
+        InterCodes code3 = getArithCodes("STAR", offset, getConst(size), number, VAL_OP);
+        
+        isAddr = true;
+        Operand res = getTemp(isAddr);
+        InterCodes code4 = getArithCodes("PLUS", res, base, offset, ADDR_OP);
+        
+        if(place != NULL){
+            *place = res;
+        }
+        return link4Codes(code1, code2, code3, code4); 
+
     }else if(
             isEqual(root->child[0]->tag,"Exp")&& //结构体的处理
             isEqual(root->child[1]->tag,"DOT")&&
             isEqual(root->child[2]->tag,"ID")){
-        // TODO:
-        return NULL;
+
+        Operand base;   //首地址
+        InterCodes code1 = translate_Exp(root->child[0], &base);
+
+        Type type = findExpTypeFromList(root->child[0]->symIndex);
+        FieldList filedList = type->u.structure;
+
+        int offset = 0;
+        while(filedList != NULL && isEqual(filedList->name, root->child[2]->val.str) == false){
+            offset = offset + getTypeSize(filedList->type);
+            filedList = filedList->tail;
+        }
+
+        int isAddr = true;
+        Operand res = getTemp(isAddr);
+        InterCodes code2 = getArithCodes("PLUS", res, base, offset, ADDR_OP);
+
+                if(place != NULL){
+            *place = res;
+        }
+
+        return link2Codes(code1, code2);
+
     }else if(
             isEqual(root->child[0]->tag,"ID")&& //函数的处理
             isEqual(root->child[1]->tag,"LP")&&
             isEqual(root->child[2]->tag,"RP")){
         // | ID LP RP
-        // TODO:
+        char * funcName = root->child[0]->val.str;
+        if(place != NULL){
+            *place = getTemp(0);
+        }
+        InterCodes codes;
+        if(isEqual(funcName,"read") == true){
+            return getReadCodes(*place);
+        }else{
+            return getCallCodes(*place, funcName);
+        }
         return NULL;
     }else if(
             isEqual(root->child[0]->tag,"ID")&& //函数的处理
@@ -248,13 +338,50 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
             isEqual(root->child[2]->tag,"Args")&&
             isEqual(root->child[3]->tag,"RP")){
         // | ID LP Args RP
-        // TODO:
-        return NULL;
+        char * funcName = root->child[0]->val.str;
+        if(place != NULL){
+            *place = getTemp(0);
+        }
+        ArgList arglist = NULL;
+        InterCodes code1 = translate_Args(root->child[2], &arglist);
+        if(isEqual(funcName, "write") == true){
+            InterCodes writeCodes = getWriteCodes(arglist->op);
+            return link2Codes(code1, writeCodes);
+        }
+        InterCodes code2 = NULL;
+        while(arglist != NULL){
+            int opKind = (arglist->opType->kind == BASIC)? VAL_OP : ADDR_OP;
+            InterCodes argCodes = getArgCodes(arglist->op, opKind);
+            code2 = link2Codes(code2, argCodes);
+            arglist = arglist->next;
+        }
+        InterCodes code3 = getCallCodes(*place, funcName);
+        return link3Codes(code1, code2, code3);
+
     }else{
         printProduction(root);
         assert(0);
     }   
 
+}
+
+InterCodes translate_Args(GramTree* root, ArgList* arglist){
+    Operand t1 = getTemp(false);
+    InterCodes code1 = translate_Exp(root->child[0], &t1);
+    
+    if(root->nChild == 1){
+        return code1;
+    }else{
+        ArgList p = malloc(sizeof(ArgListBody));
+        p->op = t1;
+        p->opType = findExpTypeFromList(root->child[0]->typeIndex);
+        p->next = *arglist;
+        *arglist = p;
+
+        InterCodes code2 = translate_Args(root->child[2], arglist);
+        return link2Codes(code1, code2);
+    }
+    
 }
 
 
@@ -403,7 +530,6 @@ InterCodes translate_Cond(GramTree*root, int label_true, int label_false){
     );
 }
 
-
 // get函数
 InterCodes getFuncCodes(GramTree* root){
     // TODO:
@@ -420,7 +546,7 @@ InterCodes getDecCode(Operand op, int decSize){
     return NULL;
 }
 
-InterCodes getASSIGNOPCode(Operand op1, Operand op2, int opKind){
+InterCodes getAssignopCode(Operand op1, Operand op2, int opKind){
     // TODO:
     return NULL;
 }
@@ -445,6 +571,30 @@ InterCodes getRelopCode(char* relopType, Operand op1, Operand op2, int label){
     return NULL;
 }
 
+InterCodes getArithCodes(char* arithType, Operand op1, Operand op2, Operand op3, int opKind){
+    //TODO
+    return NULL;  
+}
+
+InterCodes getReadCodes(Operand op){
+    //TODO
+    return NULL;  
+}
+
+InterCodes getCallCodes(Operand op, char* funcName){
+    //TODO
+    return NULL;  
+}
+
+InterCodes getWriteCodes(Operand op){
+    //TODO
+    return NULL;  
+}
+
+InterCodes getArgCodes(Operand op, int opKind){
+    //TODO
+    return NULL;      
+}
 
 
 // 中间代码的连接
@@ -512,6 +662,16 @@ Operand getConst(int value){
     op->isAddr = false;
     return op;
 }
+
+Operand getTemp(int isAddr){
+    Operand op = malloc(sizeof(OperandBody));
+    op->kind = CONSTANT;
+    globalTempIndex++;
+    op->u.value = globalTempIndex;
+    op->isAddr = isAddr;
+    return op;
+}
+
 
 // TODO:函数需要完善
 char* getOperand(Operand op, int opKind){
