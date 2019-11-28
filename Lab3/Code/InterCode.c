@@ -131,7 +131,7 @@ InterCodes translate_Dec(GramTree* root){
         Operand var = getVar(p->symIndex, isAddr);
         Operand op;
         InterCodes ExpCodes = translate_Exp(root->child[2], &op);
-        InterCode ASSIGNOPCodes = getASSIGNOPCode(var, op, VAL_OP);
+        InterCodes ASSIGNOPCodes = getASSIGNOPCode(var, op, VAL_OP);
         // TODO: 检查连接的顺序问题
         c2 = link2Codes(ExpCodes, ASSIGNOPCodes);
     }
@@ -162,8 +162,111 @@ int getFieldListSize(FieldList fieldList){
 
 
 InterCodes translate_Exp(GramTree* root, Operand* place){
-    //TODO
-    return NULL;
+    //FIXME:这块太多了，慢慢写，先把框架搭一下
+    switch (root->nChild){
+    case 1:
+        root = root->child[0];
+        // | ID
+        if(isEqual(root->tag,"ID")){
+           
+        }
+        // | INT
+        else if(isEqual(root->tag,"INT")){
+
+        }
+        // | FLOAT
+        else if(isEqual(root->tag,"FLOAT")){
+            
+        }else{
+            printError("Switch in Handle_Exp Case 1");
+            return NULL;
+        }
+        break;
+    case 2:{
+        /* TODO:code Maybe Finished ???*/
+        // | MINUS Exp : -5,-(a+b)
+        // | NOT Exp : !
+        GramTree* Exp = root->child[1];
+        GramTree* Operand = root->child[0];
+        assert(isEqual(Exp->tag,"Exp"));
+        assert(isEqual(Operand->tag,"MINUS")||isEqual(Operand->tag,"NOT"));    
+        
+        break;
+    }
+    case 3:{
+        /* TODO:code */
+        GramTree* Operand = root->child[1];
+        // NOTE:a and b only suitable for Exp Operand Exp
+        GramTree* a = root->child[0];
+        GramTree* b = root->child[2];
+        // Exp -> Exp ASSIGNOP Exp
+        if(isEqual(Operand->tag,"ASSIGNOP")){
+
+        }
+        // | Exp AND Exp
+        // | Exp OR Exp
+        else if(isEqual(Operand->tag,"AND") || isEqual(Operand->tag,"OR")){
+          
+        }
+        // | Exp RELOP Exp
+        else if(isEqual(Operand->tag,"RELOP")){
+           
+        }
+        // | Exp PLUS Exp
+        // | Exp MINUS Exp
+        // | Exp STAR Exp
+        // | Exp DIV Exp
+        else if(isEqual(Operand->tag,"PLUS")
+                ||isEqual(Operand->tag,"MINUS")
+                ||isEqual(Operand->tag,"STAR")
+                ||isEqual(Operand->tag,"DIV")){
+
+        }
+        // | LP Exp RP
+        else if(isEqual(root->child[0]->tag,"LP")
+                &&isEqual(root->child[1]->tag,"Exp")
+                &&isEqual(root->child[2]->tag,"RP")){
+
+        }
+        // | ID LP RP
+        else if(isEqual(root->child[0]->tag,"ID")
+                &&isEqual(root->child[1]->tag,"LP")
+                &&isEqual(root->child[2]->tag,"RP")){
+            
+        }
+        // | Exp DOT ID
+        else if(isEqual(root->child[0]->tag,"Exp")
+                &&isEqual(root->child[1]->tag,"DOT")
+                &&isEqual(root->child[2]->tag,"ID")){
+
+        }else{
+            printError("Exp type not Found");assert(0);
+        }
+        break;
+    }    
+    case 4:
+        /* TODO:code */
+        // | ID LP Args RP
+        if(isEqual(root->child[0]->tag,"ID") //function
+            &&isEqual(root->child[1]->tag,"LP")
+            &&isEqual(root->child[2]->tag,"Args")
+            &&isEqual(root->child[3]->tag,"RP")){
+            
+        }
+        // | Exp LB Exp RB
+        else if(isEqual(root->child[0]->tag,"Exp")
+                &&isEqual(root->child[1]->tag,"LB")
+                &&isEqual(root->child[2]->tag,"Exp")
+                &&isEqual(root->child[3]->tag,"RB")){
+            
+        }else{
+            printError("Exp type not Found");assert(0);
+        }
+        break;    
+    default:
+        printError("Switch in Handle_Exp");
+        break;
+    }
 }
 
 
@@ -251,8 +354,65 @@ InterCodes translate_Stmt(GramTree* root){
     }
 }
 
-InterCodes translate_Cond(GramTree*root, int label1, int label2){
+InterCodes translate_Cond(GramTree*root, int label_true, int label_false){
+    if(root->nChild ==  3){
+        if(isEqual(root->child[1]->tag, "RELOP")){
+            // Exp RELOP Exp
+            Operand t1;
+            Operand t2;
+            InterCodes ExpCodes1 =  translate_Exp(root->child[0], &t1);
+            InterCodes ExpCodes2 =  translate_Exp(root->child[2], &t2);
+            InterCodes relopCodes = getRelopCode(root->child[1]->val.str, t1, t2, label_true);
+            InterCodes gotoCodes = getGotoCode(label_false);
+            return link4Codes(
+                ExpCodes1,
+                ExpCodes2,
+                relopCodes,
+                gotoCodes
+            );
 
+        }else if(isEqual(root->child[1]->tag, "AND")){
+            // Exp AND Exp
+            int label1 = getNewLabel();
+            InterCodes condCodes1 = translate_Cond(root->child[0],  label1, label_false);
+            InterCodes condCodes2 = translate_Cond(root->child[2],  label_true, label_false);
+            InterCodes labelCodes = getLabelCode(label1);
+            return link3Codes(
+                condCodes1,
+                labelCodes,
+                condCodes2
+            );
+
+        }else if(isEqual(root->child[1]->tag, "OR")){
+            // Exp OR Exp
+            int label1 = getNewLabel();
+            InterCodes condCodes1 = translate_Cond(root->child[0],  label_true, label1 );
+            InterCodes condCodes2 = translate_Cond(root->child[2],  label_true, label_false);
+            InterCodes labelCodes = getLabelCode(label1);
+            return link3Codes(
+                condCodes1,
+                labelCodes,
+                condCodes2
+            );
+
+        }else{
+            //到最后面
+        }
+    }else if(root->nChild == 2 && isEqual(root->child[0]->tag, "NOT")){
+        // NOT Exp
+        return translate_Cond(root->child[0], label_false, label_true);
+    }else{
+        //到最后面
+    }
+    Operand t1;
+    InterCodes code1 = translate_Exp(root, &t1);
+    InterCodes relopCodes = getRelopCode("!=", t1, getConst(0), label_true);
+    InterCodes gotoCodes = getGotoCode(label_false);
+    return link3Codes(
+        code1,
+        relopCodes,
+        gotoCodes
+    );
 }
 
 
@@ -261,16 +421,6 @@ InterCodes getFuncCodes(GramTree* root){
     // TODO:
     return NULL;
 }
-
-
-// TODO:还不知道怎么写才好，先随便写一个
-Operand getVar(int value, int isAddr){
-    Operand op = malloc(sizeof(OperandBody));
-    op->kind = VARIABLE;
-    op->u.value = value;
-    op->isAddr = isAddr;
-    return op;
-} 
 
 InterCodes getParamCode(Operand op){
     // TODO:
@@ -301,6 +451,12 @@ InterCodes getGotoCode(int label){
     // TODO:
     return NULL;
 }
+
+InterCodes getRelopCode(char* relopType, Operand op1, Operand op2, int label){
+    //TODO
+    return NULL;
+}
+
 
 
 // 中间代码的连接
@@ -350,6 +506,23 @@ void printInterCodes(InterCodes codes){
         }
     }
 
+}
+
+// TODO:还不知道怎么写才好，先随便写一个
+Operand getVar(int value, int isAddr){
+    Operand op = malloc(sizeof(OperandBody));
+    op->kind = VARIABLE;
+    op->u.value = value;
+    op->isAddr = isAddr;
+    return op;
+} 
+
+Operand getConst(int value){
+    Operand op = malloc(sizeof(OperandBody));
+    op->kind = CONSTANT;
+    op->u.value = value;
+    op->isAddr = false;
+    return op;
 }
 
 // TODO:函数需要完善
