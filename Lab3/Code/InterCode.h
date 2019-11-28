@@ -129,3 +129,4 @@ InterCodes link3Codes(InterCodes c1, InterCodes c2, InterCodes c3);
 InterCodes link4Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4);
 InterCodes link5Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5);
 InterCodes link6Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5, InterCodes c6);
+InterCodes link7Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5, InterCodes c6, InterCodes c7);

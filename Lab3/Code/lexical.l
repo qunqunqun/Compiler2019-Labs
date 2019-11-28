@@ -116,7 +116,12 @@ multiEnd	\*\/
 {SEMI}			{ debug(yytext); yylval.node_type = newTreeNode("SEMI",0,yylineno);	return SEMI; }
 {COMMA}			{ debug(yytext); yylval.node_type = newTreeNode("COMMA",0,yylineno);	return COMMA; }
 {ASSIGNOP}		{ debug(yytext); yylval.node_type = newTreeNode("ASSIGNOP",0,yylineno);	return ASSIGNOP; }
-{RELOP}			{ debug(yytext); yylval.node_type = newTreeNode("RELOP",0,yylineno);	return RELOP; }
+
+{RELOP}			{ debug(yytext); yylval.node_type = newTreeNode("RELOP",0,yylineno);		
+				  GramTree* node = yylval.node_type;
+	              strcpy(node->val.str, yytext);
+				  return RELOP; }
+				  
 {PLUS}			{ debug(yytext); yylval.node_type = newTreeNode("PLUS",0,yylineno);	return PLUS; }
 {MINUS}			{ debug(yytext); yylval.node_type = newTreeNode("MINUS",0,yylineno);	return MINUS; }
 {STAR}			{ debug(yytext); yylval.node_type = newTreeNode("STAR",0,yylineno);	return STAR; }

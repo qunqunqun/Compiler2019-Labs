@@ -488,8 +488,8 @@ InterCodes translate_Stmt(GramTree* root){
             return link4Codes(
                 condCodes,
                 labelCodes1,
-                labelCodes2,
-                StmtCodes
+                StmtCodes,
+                labelCodes2
             );
 
         } else if(isEqual(root->child[0]->tag, "WHILE") == true) { // Stmt -> WHILE LP Exp RP Stmt
@@ -524,11 +524,12 @@ InterCodes translate_Stmt(GramTree* root){
             InterCodes labelCodes2 = getLabelCode(label2);
             InterCodes labelCodes3 = getLabelCode(label3);
             InterCodes gotoCodes = getGotoCode(label3);
-            return link6Codes(
+            return link7Codes(
                 condCodes,
                 labelCodes1,
                 StmtCodes1,
                 gotoCodes,
+                labelCodes2,
                 StmtCodes2,
                 labelCodes3
             );
@@ -783,6 +784,9 @@ InterCodes link6Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4
     return link2Codes( link3Codes(c1, c2, c3), link3Codes(c4, c5, c6));
 }
 
+InterCodes link7Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5, InterCodes c6, InterCodes c7){
+    return link2Codes( link3Codes(c1, c2, c3), link4Codes(c4, c5, c6, c7));
+}
 
 // 工具人函数
 // FIXME: 双向循环链表头尾实现的时候接起来吗,如果首尾相接，则需要防止死循环——回答，是的。
