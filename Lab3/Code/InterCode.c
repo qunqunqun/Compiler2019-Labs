@@ -126,7 +126,6 @@ InterCodes translate_Dec(GramTree* root){
         c1 = getDecCode(op, getTypeSize(symbol->u.var));
     }
 
-    // TODO: 读懂这里什么意思
     if(root->nChild == 3){
         int isAddr = false;
         Operand var = getVar(p->symIndex, isAddr);
@@ -142,7 +141,6 @@ InterCodes translate_Dec(GramTree* root){
 }
 
 int getTypeSize(Type type){
-    //TODO
     if(type->kind == BASIC){
         return 4;
     }else if(type->kind == ARRAY){
@@ -308,7 +306,7 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
 
         int isAddr = true;
         Operand res = getTemp(isAddr);
-        InterCodes code2 = getArithCodes("PLUS", res, base, offset, ADDR_OP);
+        InterCodes code2 = getArithCodes("PLUS", res, base, getConst(offset), ADDR_OP);
 
                 if(place != NULL){
             *place = res;
@@ -399,7 +397,6 @@ InterCodes translate_StmtList(GramTree* root){
 }
 
 InterCodes translate_Stmt(GramTree* root){
-    // TODO: Complete this function
     if(root-> nChild == 1) { //Stmt -> CompSt
         return translate_CompSt(root->child[0]);
     } else if(root->nChild == 2) { //Stmt -> Exp SEMI
@@ -632,7 +629,7 @@ InterCodes link6Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4
 
 
 // 工具人函数
-// TODO: 双向循环链表头尾实现的时候接起来吗,如果首尾相接，则需要防止死循环——回答，是的。
+// FIXME: 双向循环链表头尾实现的时候接起来吗,如果首尾相接，则需要防止死循环——回答，是的。
 void printInterCodes(InterCodes codes){
     InterCodes p = codes;
     if(p != NULL){
@@ -646,7 +643,6 @@ void printInterCodes(InterCodes codes){
 
 }
 
-// TODO:还不知道怎么写才好，先随便写一个
 Operand getVar(int value, int isAddr){
     Operand op = malloc(sizeof(OperandBody));
     op->kind = VARIABLE;
@@ -665,7 +661,7 @@ Operand getConst(int value){
 
 Operand getTemp(int isAddr){
     Operand op = malloc(sizeof(OperandBody));
-    op->kind = CONSTANT;
+    op->kind = TEMP;
     globalTempIndex++;
     op->u.value = globalTempIndex;
     op->isAddr = isAddr;
