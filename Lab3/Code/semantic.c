@@ -54,6 +54,7 @@ void myPrintf(const char* format, ...){
     }
 }
 
+
 void semantic_Init(){ //初始化函数
     assert(Top_of_stack == -1);
     for (int i = 0; i < MAX_HASHNUM; i++) {

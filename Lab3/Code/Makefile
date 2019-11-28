@@ -61,57 +61,8 @@ gramTest:
 	./parser ../Test/test15.cmm
 
 test:
-	./parser ../Test/test1.cmm
-	./parser ../Test/test2.cmm
-	./parser ../Test/test3.cmm
-	./parser ../Test/test4.cmm
-	./parser ../Test/test5.cmm
-	./parser ../Test/test6.cmm
-	./parser ../Test/test7.cmm
-	./parser ../Test/test8.cmm
-	./parser ../Test/test9.cmm
-	./parser ../Test/test10.cmm
-	./parser ../Test/test11.cmm
-	./parser ../Test/test12.cmm
-	./parser ../Test/test13.cmm
-	./parser ../Test/test14.cmm
-	./parser ../Test/test15.cmm
-	./parser ../Test/test16.cmm
-	./parser ../Test/test17.cmm
-	./parser ../Test/add_test1.cmm
-	./parser ../Test/add_test2.cmm
-	./parser ../Test/add_test3.cmm
-	./parser ../Test/add_test4.cmm
-	./parser ../Test/add_test5.cmm
-	./parser ../Test/add_test6.cmm
-	./parser ../Test/A_1.cmm
-	./parser ../Test/A_2.cmm
-	./parser ../Test/A_3.cmm
-	./parser ../Test/A_4.cmm
-	./parser ../Test/A_5.cmm
-	./parser ../Test/A_6.cmm
-	./parser ../Test/A_7.cmm
-	./parser ../Test/A_8.cmm
-	./parser ../Test/A_9.cmm
-	./parser ../Test/A_10.cmm 
-	./parser ../Test/A_11.cmm
-	./parser ../Test/A_12.cmm
-	./parser ../Test/A_13.cmm
-	./parser ../Test/A_14.cmm
-	./parser ../Test/A_15.cmm
-	./parser ../Test/A_16.cmm
-	./parser ../Test/A_17.cmm
-	./parser ../Test/A_18.cmm
-	./parser ../Test/A_19.cmm
-	./parser ../Test/A_20.cmm
-	./parser ../Test/B_1.cmm
-	./parser ../Test/B_2.cmm	
-	./parser ../Test/C_1.cmm
-	./parser ../Test/C_2.cmm	
-	./parser ../Test/D_1.cmm
-	./parser ../Test/D_2.cmm	
-	./parser ../Test/D_3.cmm	
-	./parser ../Test/E_2.cmm	
+	./parser ../Test/test1.c
+	
 
 addtionTest:
 	# ./parser ../Test/A_1.cmm

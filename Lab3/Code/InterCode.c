@@ -3,18 +3,55 @@
 int globalLabelIndex = -1;
 int globalTempIndex = -1;
 
+int is_iPrint = true;
+//工具人函数
+void iPrintPhase(char * msg){
+    return;
+    if(is_iPrint){
+        printf("---------- %s ----------\n", msg);
+    }
+}
+
+void iPrintProduction(GramTree* root){
+    if(is_iPrint){
+        printf("%s -> ",root->tag);
+        int i=0;
+        while(i<root->nChild){
+            printf("%s ",root->child[i]->tag);
+            i++;
+        }
+        printf("\n");
+    }
+}
+
+// 用于debug lab3
+void iPrintf(const char* format, ...){
+    if(is_iPrint){
+        va_list vp;
+        va_start(vp, format);
+        vprintf (format, vp);
+        va_end  (vp);
+    }
+}
+
 // translate函数
 void translateTree(GramTree * root){
+    iPrintPhase("translateTree Begin");
+    iPrintProduction(root);
     InterCodes codes = translate_Program(root);
     printInterCodes(codes);
 }
 
 InterCodes translate_Program(GramTree* root){
+    iPrintPhase("translate_Program Begin");
+    iPrintProduction(root);
     InterCodes codes = translate_ExtDefList(root->child[0]);
     return codes;
 }
 
 InterCodes translate_ExtDefList(GramTree* root){
+    iPrintPhase("translate_ExtDefList Begin");
+    iPrintProduction(root);
     // TODO:empty的话会有几个子节点？
     if(root->nChild == 0 || root->nChild == 1){
         printf("translate_ExtDefList nChild= %d\n",root->nChild);
@@ -27,6 +64,8 @@ InterCodes translate_ExtDefList(GramTree* root){
 }
 
 InterCodes translate_ExtDef(GramTree* root){
+    iPrintPhase("translate_ExtDef Begin");
+    iPrintProduction(root);
     if(root->nChild == 3){
         if(isEqual(root->child[1]->tag, "FunDec") == 1 && isEqual(root->child[2]->tag, "CompSt") == 1){
             return link2Codes(
@@ -39,6 +78,8 @@ InterCodes translate_ExtDef(GramTree* root){
 }
 
 InterCodes translate_FunDec(GramTree* root){
+    iPrintPhase("translate_FunDec Begin");
+    iPrintProduction(root);
     InterCodes funcCodes = getFuncCodes(root->child[0]);
     if(root->nChild == 3){
         return funcCodes;
@@ -51,6 +92,8 @@ InterCodes translate_FunDec(GramTree* root){
 }
 
 InterCodes translate_VarList(GramTree* root){
+    iPrintPhase("translate_VarList Begin");
+    iPrintProduction(root);
     InterCodes paramDecCodes = translate_ParamDec(root->child[0]);
     if(root->nChild == 1){
         return paramDecCodes;
@@ -62,10 +105,14 @@ InterCodes translate_VarList(GramTree* root){
 }
 
 InterCodes translate_ParamDec(GramTree* root){
+    iPrintPhase("translate_ParamDec Begin");
+    iPrintProduction(root);
     return translate_VarDec(root->child[1]);
 }
 
 InterCodes translate_VarDec(GramTree* root){
+    iPrintPhase("translate_VarDec Begin");
+    iPrintProduction(root);
     while(root->nChild == 4){
         root = root->child[0];
     }
@@ -76,12 +123,16 @@ InterCodes translate_VarDec(GramTree* root){
 }
 
 InterCodes translate_CompSt(GramTree* root){
+    iPrintPhase("translate_CompSt Begin");
+    iPrintProduction(root);
     GramTree* defList = root->child[1];
     GramTree* stmtList = root->child[2];
     return link2Codes(translate_DefList(defList),translate_StmtList(stmtList));
 }
 
 InterCodes translate_DefList(GramTree* root){
+    iPrintPhase("translate_DefList Begin");
+    iPrintProduction(root);
     // TODO:empty的话会有几个子节点？
     if(root->nChild == 0 || root->nChild == 1){
         printf("translate_DefList nChild= %d\n",root->nChild);
@@ -96,10 +147,14 @@ InterCodes translate_DefList(GramTree* root){
 }
 
 InterCodes translate_Def(GramTree* root){
+    iPrintPhase("translate_Def Begin");
+    iPrintProduction(root);
     return translate_DecList(root->child[1]);
 }
 
 InterCodes translate_DecList(GramTree* root){
+    iPrintPhase("translate_DecList Begin");
+    iPrintProduction(root);
     InterCodes decCodes = translate_Dec(root->child[0]);
     if(root->nChild == 1){
         return decCodes;
@@ -109,6 +164,8 @@ InterCodes translate_DecList(GramTree* root){
 }
 
 InterCodes translate_Dec(GramTree* root){
+    iPrintPhase("translate_Dec Begin");
+    iPrintProduction(root);
     GramTree* p = root->child[0];
     // 向下找到ID所在节点
     while(p->nChild == 4){
@@ -161,6 +218,8 @@ int getFieldListSize(FieldList fieldList){
 
 
 InterCodes translate_Exp(GramTree* root, Operand* place){
+    iPrintPhase("translate_Exp Begin");
+    iPrintProduction(root);
     //FIXME:这块太多了，慢慢写，先把框架搭一下
     int n = root->nChild;
     if(n==1){
@@ -342,8 +401,11 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         }
         ArgList arglist = NULL;
         InterCodes code1 = translate_Args(root->child[2], &arglist);
+        printError("404");
         if(isEqual(funcName, "write") == true){
+            printError("406");
             InterCodes writeCodes = getWriteCodes(arglist->op);
+            printError("408");
             return link2Codes(code1, writeCodes);
         }
         InterCodes code2 = NULL;
@@ -364,9 +426,10 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
 }
 
 InterCodes translate_Args(GramTree* root, ArgList* arglist){
+    iPrintPhase("translate_Args Begin");
+    iPrintProduction(root);
     Operand t1 = getTemp(false);
     InterCodes code1 = translate_Exp(root->child[0], &t1);
-    
     if(root->nChild == 1){
         return code1;
     }else{
@@ -385,6 +448,8 @@ InterCodes translate_Args(GramTree* root, ArgList* arglist){
 
 
 InterCodes translate_StmtList(GramTree* root){
+    iPrintPhase("translate_StmtList Begin");
+    iPrintProduction(root);
     // TODO:empty的话会有几个子节点？
     if(root->nChild == 0 || root->nChild == 1){
         printf("translate_StmtList nChild= %d\n",root->nChild);
@@ -397,13 +462,15 @@ InterCodes translate_StmtList(GramTree* root){
 }
 
 InterCodes translate_Stmt(GramTree* root){
+    iPrintPhase("translate_Stmt Begin");
+    iPrintProduction(root);
     if(root-> nChild == 1) { //Stmt -> CompSt
         return translate_CompSt(root->child[0]);
     } else if(root->nChild == 2) { //Stmt -> Exp SEMI
         return translate_Exp(root->child[0],  NULL);
     } else if(root->nChild == 3) { //Stmt -> RETURN Exp SEMI
         Operand op;
-        InterCodes ExpCodes = translate_Exp(root->child[0], &op);
+        InterCodes ExpCodes = translate_Exp(root->child[1], &op);
         InterCodes returnCodes = getReturnCode(op);
         return link2Codes(ExpCodes, returnCodes);
     } else if(root->nChild == 5) {
@@ -467,6 +534,8 @@ InterCodes translate_Stmt(GramTree* root){
 }
 
 InterCodes translate_Cond(GramTree*root, int label_true, int label_false){
+    iPrintPhase("translate_Cond Begin");
+    iPrintProduction(root);
     if(root->nChild ==  3){
         if(isEqual(root->child[1]->tag, "RELOP")){
             // Exp RELOP Exp
