@@ -39,6 +39,7 @@ struct SymbolElem_ {
     char name[30]; 
     int lineNo;
     enum { VAR_ELEMENT, FUNCTION, STRUCTURE_ELEMENT } kind; //三种类型定义
+    int symIndex;
     union {
         Type var;   //存储 VAR 和 STRUCTURE
         struct { 
@@ -78,14 +79,19 @@ void printError(char * msg);
 void printProduction(GramTree* root);
 void printSymbolElem(SymbolElem sym);
 void myPrintf(const char* format, ...);
+int isEqual(char *a, char *b);
 
 // SymbolElem_ findFromSymbolTable();
 void Clear_TopOf_Stack();   //跳出嵌套
 void insert_Symbol_Table(SymbolElem p); // stackIndex
+int insert_symbol_List(SymbolElem p);
 SymbolElem findFromTable_Struct(char *name);
 SymbolElem findFromTable(char *name);
+SymbolElem findFromList(int index);
 void CheckLeftAssign(GramTree* root); //检查是否是左值表达式
 
+void insert_Type_List(Type type);
+Type findExpTypeFromList(int index);
 int isTypeEqual(Type a, Type b);
 int isFiledListEqual(FieldList a, FieldList b);
 //报错

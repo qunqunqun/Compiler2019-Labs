@@ -72,7 +72,7 @@ InterCodes translate_VarDec(GramTree* root){
         root = root->child[0];
     }
     // 此时Root指向var了
-    Operand op = getVar(root->child[0]->symbolIndex); //FIXME:写到这里就知道有问题了
+    Operand op = getVar(root->child[0]->symIndex); //FIXME:写到这里就知道有问题了
     // TODO: 当前进度到这里
 }
 
@@ -136,9 +136,15 @@ void printInterCodes(InterCodes codes){
 
 // TODO:函数需要完善
 char* getOperand(Operand op, int opKind){
-    char* opName = "opName"; // = =随便写个虚假的
+    char* opName = "fakeOpName_in_getOperand"; // = =随便写个虚假的
     return opName;
 }
+
+char* getName(Operand op){
+    char* opName = "fakeName_in_getName()"; // = =随便写个虚假的
+    return opName;
+}
+
 
 // TODO: 后期可以定向到文件流中输出文件，目前先打印调试
 void printInterCode(InterCode code){
@@ -147,39 +153,39 @@ void printInterCode(InterCode code){
             printf("LABEL label%d :\n", code->labelNo);
             break;
         case FUNC_IR:
-            printf("FUNCTION %s :\n", code->funcName);
+            printf("FUNCTION %s :\n", code->u.single.funcName);
             break;
         case ASSIGN_IR:
-            printf("%s := %s\n", getOp(code->u.assign.left, code->opKind), getOp(code->u.assign.right, code->opKind));
+            printf("%s := %s\n", getOperand(code->u.assign.left, code->opKind), getOperand(code->u.assign.right, code->opKind));
             break;
         case ARITH_IR:
-            printf("%s := %s %c %s\n", getOp(code->u.binop.result, code->opKind), getOp(code->u.binop.op1, code->opKind), code->u.binop.arithType, getOp(code->u.binop.op2, VAL_OP));
+            printf("%s := %s %c %s\n", getOperand(code->u.binop.result, code->opKind), getOperand(code->u.binop.op1, code->opKind), code->u.binop.arithType, getOperand(code->u.binop.op2, VAL_OP));
             break;
         case RELOP_IR:
-            printf("IF %s %s %s ", getOp(code->u.relop.x, code->opKind), code->u.relop.relopType, getOp(code->u.relop.y, code->opKind));
+            printf("IF %s %s %s ", getOperand(code->u.relop.x, code->opKind), code->u.relop.relopType, getOperand(code->u.relop.y, code->opKind));
         case GOTO_IR:
             printf("GOTO label%d\n", code->labelNo);
             break;
         case RETURN_IR:
-            printf("RETURN %s\n", getOp(code->u.single.op, code->opKind));
+            printf("RETURN %s\n", getOperand(code->u.single.op, code->opKind));
             break;
         case DEC_IR:
-            printf("DEC %s %d\n", getOp(code->u.dec.op, code->opKind), code->u.dec.decSize);
+            printf("DEC %s %d\n", getOperand(code->u.dec.op, code->opKind), code->u.dec.decSize);
             break;
         case ARG_IR:
-            printf("ARG %s\n", getOp(code->u.single.op, code->opKind));
+            printf("ARG %s\n", getOperand(code->u.single.op, code->opKind));
             break;
         case CALL_IR:
-            printf("%s := CALL %s\n", getOp(code->u.single.op, code->opKind), code->u.single.funcName);
+            printf("%s := CALL %s\n", getOperand(code->u.single.op, code->opKind), code->u.single.funcName);
             break;
         case PARAM_IR:
-            printf("PARAM %s\n", getOpName(code->u.single.op));
+            printf("PARAM %s\n", getName(code->u.single.op));
             break;
         case READ_IR:
-            printf("READ %s\n", getOp(code->u.single.op, code->opKind));
+            printf("READ %s\n", getOperand(code->u.single.op, code->opKind));
             break;
         case WRITE_IR:
-            printf("WRITE %s\n", getOp(code->u.single.op, code->opKind));
+            printf("WRITE %s\n", getOperand(code->u.single.op, code->opKind));
             break;
         default:
             break;

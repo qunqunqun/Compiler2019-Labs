@@ -5,10 +5,11 @@ SymbolElem symbol_HashTable[MAX_HASHNUM]; //define hash table
 SymbolElem symbol_Stack[MAX_STACKNUM]; //define symelem stack
 int Top_of_stack = -1;  //the top of stack
 
-// SymbolElem symList[MAX_STACKNUM];
-// int global_Symbol_Index = 0;         //global sym  index,符号表
-// Type typeList[MAX_STACKNUM];
-// int global_Type_Index = 0;        //global type index，类型定义
+SymbolElem symbol_List[MAX_STACKNUM];
+int global_Symbol_Index = -1;         //glbal symbol list
+
+Type type_List[MAX_STACKNUM];
+int global_Type_Index = -1;        //global type list
 
 int isPrint = false;
 
@@ -61,8 +62,11 @@ void semantic_Init(){ //初始化函数
     for (int i = 0; i < MAX_STACKNUM; i++) {
         symbol_Stack[i] = NULL;
     }
-    //初始化栈顶
-    Top_of_stack++;
+    for (int i = 0; i < MAX_STACKNUM; i++) {
+        symbol_List[i] = NULL;
+        type_List[i] = NULL;
+    }    
+    //初始化栈顶    Top_of_stack++;
 	defineReadWriteFunc();
 }
 
@@ -402,9 +406,23 @@ void insert_Symbol_Table(SymbolElem p) {
         }
         temp->down = p;
     }
+    
+    if(p->kind == VAR_ELEMENT){
+        p->symIndex = insert_symbol_List(p);
+    }
+
     myPrintf("End insert into SymbolTable at Stack %d\n",Top_of_stack);
 }
 
+int insert_symbol_List(SymbolElem p){
+    global_Symbol_Index++;
+    symbol_List[global_Symbol_Index] = p;
+    return global_Symbol_Index;
+}
+
+SymbolElem findFromList(int index){
+    return symbol_List[index];    
+}
 
 FieldList Handle_VarList(GramTree* root){
     // VarList -> ParamDec COMMA VarList| ParamDec
@@ -577,18 +595,22 @@ Type Handle_Exp(GramTree* root){
             }else{
                 res = symbol->u.var;
             }
+            insert_Type_List(res);
+            root->symIndex = symbol->symIndex;
             return res;
         }
         // | INT
         else if(isEqual(root->tag,"INT")){
             res->kind = BASIC;
             res->u.basic = INT_TYPE;
+            insert_Type_List(res);
             return res;
         }
         // | FLOAT
         else if(isEqual(root->tag,"FLOAT")){
             res->kind = BASIC;
             res->u.basic = FLOAT_TYPE;
+            insert_Type_List(res);
             return res;
         }else{
             printError("Switch in Handle_Exp Case 1");
@@ -618,6 +640,7 @@ Type Handle_Exp(GramTree* root){
                 printErrorOfSemantic(7,root->lineNo,Exp->tag);
                 return NULL;
             } else { //如果是基本类型直接返回
+                insert_Type_List(exp_type);
                 return exp_type;
             }
         }
@@ -653,6 +676,7 @@ Type Handle_Exp(GramTree* root){
                 printErrorOfSemantic(7, Operand->lineNo, "");
                 return NULL; 
             } else {
+                insert_Type_List(ta);
                 return ta;
             }
         }
@@ -664,6 +688,7 @@ Type Handle_Exp(GramTree* root){
                 printErrorOfSemantic(7, Operand->lineNo, "");
                 return NULL;
             } else {
+                insert_Type_List(ta);
                 return ta;
             }
         }
@@ -681,6 +706,7 @@ Type Handle_Exp(GramTree* root){
                 printErrorOfSemantic(7, Operand->lineNo, "");
                 return NULL;
             } else {
+                insert_Type_List(ta);
                 return ta;
             }
         }
@@ -689,6 +715,7 @@ Type Handle_Exp(GramTree* root){
                 &&isEqual(root->child[1]->tag,"Exp")
                 &&isEqual(root->child[2]->tag,"RP")){
             res = Handle_Exp(root->child[1]);
+            insert_Type_List(res);
             return res;
         }
         // | ID LP RP
@@ -704,6 +731,7 @@ Type Handle_Exp(GramTree* root){
                 return NULL;
             } else {
                 res = funcDec->u.func.retType;
+                insert_Type_List(res);
                 return res;
             }
         }
@@ -733,6 +761,7 @@ Type Handle_Exp(GramTree* root){
                     return NULL;
                 } else {
                     res = tempField->type;
+                    insert_Type_List(res);
                     return res;
                 }
             }
@@ -792,6 +821,7 @@ Type Handle_Exp(GramTree* root){
                         return NULL;
                     } else {
                         res = ta->u.array.elem;
+                        insert_Type_List(res);
                         return res;
                     }
                 }
@@ -808,6 +838,16 @@ Type Handle_Exp(GramTree* root){
     assert(0);
     printPhase("Handle_Exp() End");
     return res;
+}
+
+int insert_Type_List(Type type){
+    global_Type_Index++;
+    type_List[global_Type_Index] = type;
+    return global_Type_Index;
+}
+
+Type findExpTypeFromList(int index){
+    return type_List[index];
 }
 
 FieldList Handle_Args(GramTree* root) {
@@ -854,6 +894,12 @@ void Handle_Dec(GramTree* root, Type type){
     }
     //insert_Into_TABLE
     insert_Symbol_Table(symbol);
+    GramTree* varDec = root->child[0];
+    while(varDec->nChild == 4){
+        varDec = varDec->child[0];
+    }
+    varDec->child[0]->symIndex = symbol->symIndex; //ID
+
     printPhase("Handle_Dec() End");
 }
 

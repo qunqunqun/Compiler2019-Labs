@@ -88,6 +88,7 @@ Operand getVar(int value);
 void printInterCodes(InterCodes codes);
 void printInterCode(InterCode code);
 char* getOperand(Operand op, int opKind);
+char* getName(Operand op);
 
 // 中间代码的连接
 InterCodes link2Codes(InterCodes c1, InterCodes c2);
