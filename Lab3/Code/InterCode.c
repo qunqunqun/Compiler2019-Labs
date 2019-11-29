@@ -194,12 +194,15 @@ InterCodes translate_Dec(GramTree* root){
 }
 
 int getTypeSize(Type type){
+    // printf("type->kind:%d",type->kind);
     if(type->kind == BASIC){
         return 4;
     }else if(type->kind == ARRAY){
         return type->u.array.size * getTypeSize(type->u.array.elem);
     }else{
+        printError("?");
         return getFieldListSize(type->u.structure);
+        printError("?");
     }
     return 0;
 }
@@ -357,13 +360,12 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
 
         Type type = findExpTypeFromList(root->child[0]->symIndex);
         FieldList filedList = type->u.structure;
-
         int offset = 0;
+        filedList = filedList->tail;
         while(filedList != NULL && isEqual(filedList->name, root->child[2]->val.str) == false){
             offset = offset + getTypeSize(filedList->type);
             filedList = filedList->tail;
         }
-
         int isAddr = true;
         Operand res = getTemp(isAddr);
         InterCodes code2 = getArithCodes("PLUS", res, base, getConst(offset), ADDR_OP);

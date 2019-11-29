@@ -1078,19 +1078,21 @@ void Handle_ExtDef(GramTree* root) {
         } else if(isEqual( root->child[1]->tag, "FunDec") == 1) { 
             printProduction(root);  // ExtDef -> Specifier FunDec CompSt
             // Function ,meet {} stack ++;
-            Top_of_stack ++;
-            symbol_Stack[Top_of_stack] = NULL;
             myPrintf("tag:%s\n",root->child[0]->tag);
             Type return_type = getType(root->child[0]); 
             if(return_type == NULL) { //感觉不应该发生的
                 assert(0);
                 return; 
             }
-            SymbolElem res = Handle_FunDec(root->child[1]);
+            SymbolElem res = Handle_FunDec(root->child[1]);  
             if(res == NULL){
                 assert(0);
             }
             res->u.func.retType = return_type;
+            insert_Symbol_Table(res);    
+
+            Top_of_stack ++;
+            symbol_Stack[Top_of_stack] = NULL;
             if(isEqual(root->child[2]->tag,"CompSt")){
                 res->u.func.complete = true;
                 Handle_CompSt(root->child[2],return_type);
@@ -1098,8 +1100,7 @@ void Handle_ExtDef(GramTree* root) {
                 res->u.func.complete = false;
             }
             Clear_TopOf_Stack();
-            insert_Symbol_Table(res);
-        
+
         } else if(isEqual( root->child[1]->tag, "SEMI") == 1) { //special for STRUCT
             getType(root->child[0]);
             // TODO: Complete this function
