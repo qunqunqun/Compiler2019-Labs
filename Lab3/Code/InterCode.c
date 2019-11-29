@@ -277,6 +277,7 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         Operand t2;
         InterCodes ExpCodes1 = translate_Exp(root->child[0], &t1);
         InterCodes ExpCodes2 = translate_Exp(root->child[2], &t2);
+        *place = getTemp(0);
         InterCodes arithCodes = getArithCodes(root->child[1]->tag, *place, t1, t2, VAL_OP);
         return link3Codes(ExpCodes1,ExpCodes2,arithCodes);
 
@@ -358,7 +359,7 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         Operand base;   //首地址
         InterCodes code1 = translate_Exp(root->child[0], &base);
 
-        Type type = findExpTypeFromList(root->child[0]->symIndex);
+        Type type = findExpTypeFromList(root->child[0]->typeIndex);
         FieldList filedList = type->u.structure;
         int offset = 0;
         filedList = filedList->tail;
@@ -370,7 +371,7 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         Operand res = getTemp(isAddr);
         InterCodes code2 = getArithCodes("PLUS", res, base, getConst(offset), ADDR_OP);
 
-                if(place != NULL){
+        if(place != NULL){
             *place = res;
         }
 
@@ -478,6 +479,7 @@ InterCodes translate_Stmt(GramTree* root){
         Operand op;
         InterCodes ExpCodes = translate_Exp(root->child[1], &op);
         InterCodes returnCodes = getReturnCode(op);
+        printError(getOperand(op, VAL_OP));
         return link2Codes(ExpCodes, returnCodes);
     } else if(root->nChild == 5) {
         if(isEqual(root->child[0]->tag, "IF") == true) {// Stmt -> IF LP Exp RP Stmt
@@ -842,6 +844,7 @@ char* getOperand(Operand op, int opKind){
         printError("getOperand:op == NULL");
     }
     char* opName = getName(op);
+    // printError(opName);
     char* ret = malloc(30);
     switch (opKind)
     {

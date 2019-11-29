@@ -61,7 +61,7 @@ gramTest:
 	./parser ../Test/test15.cmm
 
 test:
-	./parser ../Test/test1.c
+	./parser ../Test/test4.c
 	
 
 addtionTest:

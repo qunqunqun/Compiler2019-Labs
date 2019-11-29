@@ -579,7 +579,8 @@ int isTypeEqual(Type a, Type b){    //decide if Type is Equal
 Type Handle_Exp(GramTree* root){ 
     // TODO: Return the type of Exp
     printPhase("Handle_Exp() Begin");
-    printProduction(root);    
+    printProduction(root);  
+    GramTree* tRoot = root; // type Root  
     Type res = malloc(sizeof(Typesize));
     switch (root->nChild){
     case 1:
@@ -599,7 +600,7 @@ Type Handle_Exp(GramTree* root){
             }else{
                 res = symbol->u.var;
             }
-            insert_Type_List(res);
+            tRoot->typeIndex = insert_Type_List(res);
             root->symIndex = symbol->symIndex;
             return res;
         }
@@ -607,14 +608,14 @@ Type Handle_Exp(GramTree* root){
         else if(isEqual(root->tag,"INT")){
             res->kind = BASIC;
             res->u.basic = INT_TYPE;
-            insert_Type_List(res);
+             tRoot->typeIndex = insert_Type_List(res);
             return res;
         }
         // | FLOAT
         else if(isEqual(root->tag,"FLOAT")){
             res->kind = BASIC;
             res->u.basic = FLOAT_TYPE;
-            insert_Type_List(res);
+             tRoot->typeIndex = insert_Type_List(res);
             return res;
         }else{
             printError("Switch in Handle_Exp Case 1");
@@ -644,7 +645,7 @@ Type Handle_Exp(GramTree* root){
                 printErrorOfSemantic(7,root->lineNo,Exp->tag);
                 return NULL;
             } else { //如果是基本类型直接返回
-                insert_Type_List(exp_type);
+                 tRoot->symIndex = insert_Type_List(exp_type);
                 return exp_type;
             }
         }
@@ -680,7 +681,7 @@ Type Handle_Exp(GramTree* root){
                 printErrorOfSemantic(7, Operand->lineNo, "");
                 return NULL; 
             } else {
-                insert_Type_List(ta);
+                 tRoot->symIndex = insert_Type_List(ta);
                 return ta;
             }
         }
@@ -692,7 +693,7 @@ Type Handle_Exp(GramTree* root){
                 printErrorOfSemantic(7, Operand->lineNo, "");
                 return NULL;
             } else {
-                insert_Type_List(ta);
+                 tRoot->symIndex = insert_Type_List(ta);
                 return ta;
             }
         }
@@ -710,7 +711,7 @@ Type Handle_Exp(GramTree* root){
                 printErrorOfSemantic(7, Operand->lineNo, "");
                 return NULL;
             } else {
-                insert_Type_List(ta);
+                 tRoot->symIndex = insert_Type_List(ta);
                 return ta;
             }
         }
@@ -719,7 +720,7 @@ Type Handle_Exp(GramTree* root){
                 &&isEqual(root->child[1]->tag,"Exp")
                 &&isEqual(root->child[2]->tag,"RP")){
             res = Handle_Exp(root->child[1]);
-            insert_Type_List(res);
+             tRoot->typeIndex = insert_Type_List(res);
             return res;
         }
         // | ID LP RP
@@ -735,7 +736,7 @@ Type Handle_Exp(GramTree* root){
                 return NULL;
             } else {
                 res = funcDec->u.func.retType;
-                insert_Type_List(res);
+                 tRoot->typeIndex = insert_Type_List(res);
                 return res;
             }
         }
@@ -765,7 +766,7 @@ Type Handle_Exp(GramTree* root){
                     return NULL;
                 } else {
                     res = tempField->type;
-                    insert_Type_List(res);
+                     tRoot->typeIndex = insert_Type_List(res);
                     return res;
                 }
             }
@@ -825,7 +826,7 @@ Type Handle_Exp(GramTree* root){
                         return NULL;
                     } else {
                         res = ta->u.array.elem;
-                        insert_Type_List(res);
+                         tRoot->typeIndex = insert_Type_List(res);
                         return res;
                     }
                 }
