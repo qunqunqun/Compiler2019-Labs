@@ -40,6 +40,7 @@ void translateTree(GramTree * root){
     iPrintProduction(root);
     InterCodes codes = translate_Program(root);
     printInterCodes(codes);
+    outputCodeFile(codes);
 }
 
 InterCodes translate_Program(GramTree* root){
@@ -105,6 +106,7 @@ InterCodes translate_VarList(GramTree* root){
 InterCodes translate_ParamDec(GramTree* root){
     iPrintPhase("translate_ParamDec Begin");
     iPrintProduction(root);
+
     return translate_VarDec(root->child[1]);
 }
 
@@ -116,6 +118,7 @@ InterCodes translate_VarDec(GramTree* root){
     }
     // 此时root指向var了,root->child[0]就是ID
     int isAddr = true;
+    //printf("!!!%s,%d\n",root->child[0]->tag,root->child[0]->symIndex);
     Operand op = getVar(root->child[0]->symIndex, isAddr); //FIXME:写到这里就知道有问题了
     return getParamCode(op);
 }
@@ -167,10 +170,10 @@ InterCodes translate_Dec(GramTree* root){
     while(p->nChild == 4){
         p = p->child[0];
     }
-    
+    printError("180");
     //FIXME 这的问题,把下面一行注释掉
     // p = p->child[0];    // ID所在节点 
-    printf("p->symIndex = %d\n", p->symIndex);
+    //printf("p->symIndex = %d\n", p->symIndex);
     SymbolElem symbol = findFromList(p->symIndex);
     printSymbolElem(symbol);
     InterCodes c1 = NULL;
@@ -179,6 +182,7 @@ InterCodes translate_Dec(GramTree* root){
     if(symbol->u.var->kind != BASIC){
         printError("179");
         int isAddr = true;
+        //printf("!!!!!!!!%s,%d\n",p->tag,p->symIndex);
         Operand op = getVar(p->symIndex, isAddr);
         printError("183");
         c1 = getDecCode(op, getTypeSize(symbol->u.var));
@@ -241,7 +245,7 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         root = root->child[0];
         // | ID
         if(isEqual(root->tag,"ID")){
-            printf("root->symIndex = %d\n", root->symIndex);
+            //printf("root->symIndex = %d\n", root->symIndex);
             SymbolElem symbol = findFromList(root->symIndex);
             int isAddr = false;
             if(symbol->u.var->kind != BASIC && symbol->isParam == true){
@@ -567,6 +571,7 @@ InterCodes translate_Cond(GramTree*root, int label_true, int label_false){
             Operand t2;
             InterCodes ExpCodes1 =  translate_Exp(root->child[0], &t1);
             InterCodes ExpCodes2 =  translate_Exp(root->child[2], &t2);
+            printf("????:%s\n",root->child[1]->val.str);
             InterCodes relopCodes = getRelopCode(root->child[1]->val.str, t1, t2, label_true);
             InterCodes gotoCodes = getGotoCode(label_false);
             return link4Codes(
@@ -605,7 +610,7 @@ InterCodes translate_Cond(GramTree*root, int label_true, int label_false){
         }
     }else if(root->nChild == 2 && isEqual(root->child[0]->tag, "NOT")){
         // NOT Exp
-        return translate_Cond(root->child[0], label_false, label_true);
+        return translate_Cond(root->child[1], label_false, label_true);
     }else{
         //到最后面
     }
@@ -958,6 +963,72 @@ void printInterCode(InterCode code){
             break;
         case WRITE_IR:
             printf("WRITE %s\n", getOperand(code->u.single.op, code->opKind));
+            break;
+        default:
+            break;
+    }
+}
+
+
+void outputCodeFile(InterCodes codes) {
+    FILE* file = fopen(codeFileName, "w");
+    InterCodes h = codes;
+    if (h != NULL) {
+        printOutCode(file, h->code);
+        h = h->next;
+        while (h != codes) {
+            printOutCode(file, h->code);
+            h = h->next;
+        }
+    }
+    fclose(file);
+}
+
+void printOutCode(FILE* file,InterCode code) {//写一行到文件中
+    switch (code->kind) {
+        case LABLE_IR:
+            fprintf(file,"LABEL label%d :\n", code->labelNo);
+            break;
+        case FUNC_IR:
+            fprintf(file,"FUNCTION %s :\n", code->u.single.funcName);
+            break;
+        case ASSIGN_IR:
+            if(code->u.assign.left == NULL){
+                assert(0);
+            }
+            if(code->u.assign.right == NULL){
+                assert(0);
+            }
+            fprintf(file,"%s := %s\n", getOperand(code->u.assign.left, code->opKind), getOperand(code->u.assign.right, code->opKind));
+            break;
+        case ARITH_IR:
+            fprintf(file,"%s := %s %c %s\n", getOperand(code->u.binop.result, code->opKind), getOperand(code->u.binop.op1, code->opKind), code->u.binop.arithType, getOperand(code->u.binop.op2, VAL_OP));
+            break;
+        case RELOP_IR:
+            fprintf(file,"IF %s %s %s ", getOperand(code->u.relop.x, code->opKind), code->u.relop.relopType, getOperand(code->u.relop.y, code->opKind));
+        case GOTO_IR:
+            fprintf(file,"GOTO label%d\n", code->labelNo);
+            break;
+        case RETURN_IR:
+            fprintf(file,"RETURN %s\n", getOperand(code->u.single.op, code->opKind));
+            break;
+        case DEC_IR:
+            fprintf(file,"DEC %s %d\n", getOperand(code->u.dec.op, code->opKind), code->u.dec.decSize);
+            break;
+        case ARG_IR:
+            fprintf(file,"ARG %s\n", getOperand(code->u.single.op, code->opKind));
+            break;
+        case CALL_IR:
+            fprintf(file,"%s := CALL %s\n", getOperand(code->u.single.op, code->opKind), code->u.single.funcName);
+            break;
+        case PARAM_IR:
+            fprintf(file,"PARAM %s\n", getName(code->u.single.op));
+            break;
+        case READ_IR:
+            fprintf(file,"READ %s\n", getOperand(code->u.single.op, code->opKind));
+            break;
+        case WRITE_IR:
+            fprintf(file,"WRITE %s\n", getOperand(code->u.single.op, code->opKind));
             break;
         default:
             break;

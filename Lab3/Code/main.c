@@ -7,7 +7,7 @@ extern FILE* yyin;
 extern int yylex();
 extern int yyparse();
 extern int yyrestart(FILE *);
-
+extern char* codeFileName;
 
 //version 1
 int main(int argc, char ** argv){
@@ -18,6 +18,7 @@ int main(int argc, char ** argv){
 		perror(argv[1]);
 		return 1;
 	}
+	codeFileName =  argv[2];
 	//start parse
 	ErrorFlag = 0;
 	yyrestart(f);
@@ -25,7 +26,7 @@ int main(int argc, char ** argv){
 	yyparse();
 	fclose(f);
 	if( ErrorFlag == 0){
-		printGramTree(treeRoot,0);	//if has no error test senamatic
+		//printGramTree(treeRoot,0);	//if has no error test senamatic
 		printPhase("Grammar Tree Printf End");
 		semanticParse(treeRoot);
 		translateTree(treeRoot);

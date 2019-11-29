@@ -21,7 +21,7 @@ void printPhase(char * msg){
 }
 
 void printError(char * msg){
-    printf("\033[31mError %s \033[0m \n", msg);
+    //printf("\033[31mError %s \033[0m \n", msg);
 }
 
 void printProduction(GramTree* root){
@@ -37,13 +37,13 @@ void printProduction(GramTree* root){
 }
 
 void printSymbolElem(SymbolElem sym){
-    printPhase("printSymbolElem() Start");
-    printf("Symbol.Name is: %s\n",sym->name);
-    printf("Symbol.lineNo is: %d\n",sym->lineNo);
-    printf("Symbol.kind is: %d\n",sym->kind);    
-    // TODO: More information
-    printf("Symbol.index is: %d\n",sym->symIndex);    
-    printPhase("printSymbolElem() End");
+    // printPhase("printSymbolElem() Start");
+    // printf("Symbol.Name is: %s\n",sym->name);
+    // printf("Symbol.lineNo is: %d\n",sym->lineNo);
+    // printf("Symbol.kind is: %d\n",sym->kind);    
+    // // TODO: More information
+    // printf("Symbol.index is: %d\n",sym->symIndex);    
+    // printPhase("printSymbolElem() End");
 }
 
 void myPrintf(const char* format, ...){
@@ -411,7 +411,7 @@ void insert_Symbol_Table(SymbolElem p) {
     }
     
     if(p->kind == VAR_ELEMENT){
-        printf("insert_symbol_List %s\n",p->name);
+        //printf("insert_symbol_List %s\n",p->name);
         p->symIndex = insert_symbol_List(p);
     }
 
@@ -421,7 +421,7 @@ void insert_Symbol_Table(SymbolElem p) {
 int insert_symbol_List(SymbolElem p){
     global_Symbol_Index++;
     symbol_List[global_Symbol_Index] = p;
-    printf("insertList: symIndex=%d, sym->name=%s\n", global_Symbol_Index, p->name);
+    //printf("insertList: symIndex=%d, sym->name=%s\n", global_Symbol_Index, p->name);
     printSymbolElem(p);
     printError("427---------------------------------------------------------------------------------------");
     return global_Symbol_Index;
@@ -910,7 +910,7 @@ void Handle_Dec(GramTree* root, Type type){
     }
     // FIXME : 这里symbol->name 有 n，但是后面解析的时候却找不到n
     printError(symbol->name);
-    printf("symIndex = %d\n" ,symbol->symIndex);
+    //printf("symIndex = %d\n" ,symbol->symIndex);
     printError("910");
     varDec->child[0]->symIndex = symbol->symIndex; //ID
 

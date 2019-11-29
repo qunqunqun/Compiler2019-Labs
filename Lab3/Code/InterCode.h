@@ -1,5 +1,7 @@
 #include "semantic.h"
 
+
+char* codeFileName; //写出的文件的名字
 // 址操作与值操作
 enum { ADDR_OP, VAL_OP } ;
 
@@ -130,3 +132,6 @@ InterCodes link4Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4
 InterCodes link5Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5);
 InterCodes link6Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5, InterCodes c6);
 InterCodes link7Codes(InterCodes c1, InterCodes c2, InterCodes c3, InterCodes c4, InterCodes c5, InterCodes c6, InterCodes c7);
+
+void outputCodeFile(InterCodes codes); //写出文件函数
+void printOutCode(FILE* file, InterCode code); //写一行到文件中
