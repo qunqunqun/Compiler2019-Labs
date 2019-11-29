@@ -122,7 +122,7 @@ int getNewLabel();
 // 超级工具人函数
 void iPrintPhase(char * msg);
 void iPrintf(const char* format, ...);
-void iprintProduction(GramTree* root);
+void iPrintProduction(GramTree* root);
 // 中间代码的连接
 InterCodes link2Codes(InterCodes c1, InterCodes c2);
 InterCodes link3Codes(InterCodes c1, InterCodes c2, InterCodes c3);

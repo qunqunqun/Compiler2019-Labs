@@ -168,18 +168,25 @@ InterCodes translate_Dec(GramTree* root){
         p = p->child[0];
     }
     
+    //FIXME 这的问题,把下面一行注释掉
+    // p = p->child[0];    // ID所在节点 
+    printf("p->symIndex = %d\n", p->symIndex);
     SymbolElem symbol = findFromList(p->symIndex);
-
+    printSymbolElem(symbol);
     InterCodes c1 = NULL;
     InterCodes c2 = NULL;
 
     if(symbol->u.var->kind != BASIC){
+        printError("179");
         int isAddr = true;
         Operand op = getVar(p->symIndex, isAddr);
+        printError("183");
         c1 = getDecCode(op, getTypeSize(symbol->u.var));
+        printError("185");
     }
 
     if(root->nChild == 3){
+        printError("186");
         int isAddr = false;
         Operand var = getVar(p->symIndex, isAddr);
         Operand op;
@@ -195,9 +202,15 @@ InterCodes translate_Dec(GramTree* root){
 
 int getTypeSize(Type type){
     // printf("type->kind:%d",type->kind);
+    printError("205");
+    if(type == NULL){
+        printError("207");
+    }
     if(type->kind == BASIC){
+        printError("210");
         return 4;
     }else if(type->kind == ARRAY){
+        printError("213");
         return type->u.array.size * getTypeSize(type->u.array.elem);
     }else{
         printError("?");
@@ -208,9 +221,12 @@ int getTypeSize(Type type){
 }
 
 int getFieldListSize(FieldList fieldList){
+    printError("219");
     if(fieldList == NULL){
+        printError("221");
         return 0;
     } else{
+        printError("224");
         return getTypeSize(fieldList->type) + getFieldListSize(fieldList->tail);
     }
 }
@@ -225,7 +241,7 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         root = root->child[0];
         // | ID
         if(isEqual(root->tag,"ID")){
-            iPrintf("root->symIndex = %d\n", root->symIndex);
+            printf("root->symIndex = %d\n", root->symIndex);
             SymbolElem symbol = findFromList(root->symIndex);
             int isAddr = false;
             if(symbol->u.var->kind != BASIC && symbol->isParam == true){
@@ -479,7 +495,6 @@ InterCodes translate_Stmt(GramTree* root){
         Operand op;
         InterCodes ExpCodes = translate_Exp(root->child[1], &op);
         InterCodes returnCodes = getReturnCode(op);
-        printError(getOperand(op, VAL_OP));
         return link2Codes(ExpCodes, returnCodes);
     } else if(root->nChild == 5) {
         if(isEqual(root->child[0]->tag, "IF") == true) {// Stmt -> IF LP Exp RP Stmt

@@ -42,6 +42,7 @@ void printSymbolElem(SymbolElem sym){
     printf("Symbol.lineNo is: %d\n",sym->lineNo);
     printf("Symbol.kind is: %d\n",sym->kind);    
     // TODO: More information
+    printf("Symbol.index is: %d\n",sym->symIndex);    
     printPhase("printSymbolElem() End");
 }
 
@@ -410,7 +411,7 @@ void insert_Symbol_Table(SymbolElem p) {
     }
     
     if(p->kind == VAR_ELEMENT){
-        // printf("insert_symbol_List %s\n",p->name);
+        printf("insert_symbol_List %s\n",p->name);
         p->symIndex = insert_symbol_List(p);
     }
 
@@ -420,6 +421,9 @@ void insert_Symbol_Table(SymbolElem p) {
 int insert_symbol_List(SymbolElem p){
     global_Symbol_Index++;
     symbol_List[global_Symbol_Index] = p;
+    printf("insertList: symIndex=%d, sym->name=%s\n", global_Symbol_Index, p->name);
+    printSymbolElem(p);
+    printError("427---------------------------------------------------------------------------------------");
     return global_Symbol_Index;
 }
 
@@ -904,6 +908,10 @@ void Handle_Dec(GramTree* root, Type type){
     while(varDec->nChild == 4){
         varDec = varDec->child[0];
     }
+    // FIXME : 这里symbol->name 有 n，但是后面解析的时候却找不到n
+    printError(symbol->name);
+    printf("symIndex = %d\n" ,symbol->symIndex);
+    printError("910");
     varDec->child[0]->symIndex = symbol->symIndex; //ID
 
     printPhase("Handle_Dec() End");
