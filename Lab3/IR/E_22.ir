@@ -1,0 +1,115 @@
+FUNCTION qsort :
+PARAM v0
+PARAM v1
+PARAM v2
+t0 := #4 * v1
+t1 := v0 + t0
+v3 := *t1
+v4 := v1
+v5 := v2
+IF v4 < v5 GOTO label0
+GOTO label1
+LABEL label0 :
+LABEL label2 :
+IF v4 < v5 GOTO label3
+GOTO label4
+LABEL label3 :
+LABEL label5 :
+IF v4 < v5 GOTO label8
+GOTO label7
+LABEL label8 :
+t2 := #4 * v5
+t3 := v0 + t2
+IF *t3 > v3 GOTO label6
+GOTO label7
+LABEL label6 :
+t4 := v5 - #1
+v5 := t4
+GOTO label5
+LABEL label7 :
+IF v4 < v5 GOTO label9
+GOTO label10
+LABEL label9 :
+t5 := #4 * v4
+t6 := v0 + t5
+t7 := #4 * v5
+t8 := v0 + t7
+*t6 := *t8
+t9 := v4 + #1
+v4 := t9
+LABEL label10 :
+LABEL label11 :
+IF v4 < v5 GOTO label14
+GOTO label13
+LABEL label14 :
+t10 := #4 * v4
+t11 := v0 + t10
+IF *t11 < v3 GOTO label12
+GOTO label13
+LABEL label12 :
+t12 := v4 + #1
+v4 := t12
+GOTO label11
+LABEL label13 :
+IF v4 < v5 GOTO label15
+GOTO label16
+LABEL label15 :
+t13 := #4 * v5
+t14 := v0 + t13
+t15 := #4 * v4
+t16 := v0 + t15
+*t14 := *t16
+t17 := v5 - #1
+v5 := t17
+LABEL label16 :
+GOTO label2
+LABEL label4 :
+t18 := #4 * v4
+t19 := v0 + t18
+*t19 := v3
+t24 := v4 - #1
+ARG t24
+ARG v1
+ARG v0
+t20 := CALL qsort
+t28 := v4 + #1
+ARG v2
+ARG t28
+ARG v0
+t25 := CALL qsort
+LABEL label1 :
+RETURN #0
+FUNCTION main :
+DEC *v6 40
+v7 := #10
+v8 := #0
+LABEL label17 :
+IF v8 < v7 GOTO label18
+GOTO label19
+LABEL label18 :
+t30 := #4 * v8
+t31 := &v6 + t30
+READ t32
+*t31 := t32
+t33 := v8 + #1
+v8 := t33
+GOTO label17
+LABEL label19 :
+t38 := v7 - #1
+ARG t38
+ARG #0
+ARG &v6
+t34 := CALL qsort
+v8 := #0
+LABEL label20 :
+IF v8 < v7 GOTO label21
+GOTO label22
+LABEL label21 :
+t41 := #4 * v8
+t42 := &v6 + t41
+WRITE *t42
+t43 := v8 + #1
+v8 := t43
+GOTO label20
+LABEL label22 :
+RETURN #0

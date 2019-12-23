@@ -2,6 +2,7 @@
 #include "common.h"
 #include "semantic.h"
 #include "InterCode.h"
+#include "objectCode.h"
 
 extern FILE* yyin;
 extern int yylex();
@@ -30,7 +31,7 @@ int main(int argc, char ** argv){
 		printPhase("Grammar Tree Printf End");
 		semanticParse(treeRoot);
 		InterCodes codes = translateTree(treeRoot);
-		//objectCode(codes); //转化为目标代码
+		objectCode(codes); //转化为目标代码
 	}
 	return 0;
 }

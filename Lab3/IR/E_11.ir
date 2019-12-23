@@ -1,0 +1,12 @@
+FUNCTION main :
+DEC *v2 8
+t0 := &v2 + #0
+READ t1
+*t0 := t1
+t2 := &v2 + #4
+*t2 := #3
+t5 := &v2 + #0
+t6 := &v2 + #4
+t7 := *t5 + *t6
+WRITE t7
+RETURN #0

@@ -1,0 +1,231 @@
+FUNCTION display :
+PARAM v0
+PARAM v1
+PARAM v2
+DEC *v3 400
+v4 := #0
+v5 := #0
+v6 := #1
+t0 := #4 * #0
+t1 := v1 + t0
+IF *t1 == #1 GOTO label0
+GOTO label1
+LABEL label0 :
+LABEL label2 :
+IF v4 < v2 GOTO label3
+GOTO label4
+LABEL label3 :
+v5 := #0
+v6 := #1
+LABEL label5 :
+IF v5 < v2 GOTO label6
+GOTO label7
+LABEL label6 :
+t2 := #4 * v4
+t3 := v0 + t2
+IF v5 == *t3 GOTO label8
+GOTO label9
+LABEL label8 :
+t4 := #40 * v4
+t5 := &v3 + t4
+t6 := #4 * v5
+t7 := t5 + t6
+*t7 := #1
+t8 := v6 * #10
+t9 := t8 + #1
+v6 := t9
+GOTO label10
+LABEL label9 :
+t10 := #40 * v4
+t11 := &v3 + t10
+t12 := #4 * v5
+t13 := t11 + t12
+*t13 := #0
+t14 := v6 * #10
+v6 := t14
+LABEL label10 :
+t15 := v5 + #1
+v5 := t15
+GOTO label5
+LABEL label7 :
+WRITE v6
+t18 := v4 + #1
+v4 := t18
+GOTO label2
+LABEL label4 :
+LABEL label1 :
+RETURN #0
+FUNCTION dfs :
+PARAM v7
+PARAM v8
+PARAM v9
+PARAM v10
+PARAM v11
+PARAM v12
+PARAM v13
+v14 := #0
+DEC *v15 40
+DEC *v16 40
+IF v11 == v12 GOTO label11
+GOTO label12
+LABEL label11 :
+t19 := #4 * #0
+t20 := v13 + t19
+t21 := #4 * #0
+t22 := v13 + t21
+t23 := *t22 + #1
+*t20 := t23
+ARG v12
+ARG v13
+ARG v7
+t24 := CALL display
+RETURN #0
+LABEL label12 :
+LABEL label13 :
+IF v14 < v12 GOTO label14
+GOTO label15
+LABEL label14 :
+t28 := #4 * v14
+t29 := v8 + t28
+IF *t29 == #1 GOTO label19
+GOTO label17
+LABEL label19 :
+t30 := #4 * v14
+t31 := v9 + t30
+IF *t31 == #1 GOTO label18
+GOTO label17
+LABEL label18 :
+t32 := #4 * v14
+t33 := v10 + t32
+IF *t33 == #1 GOTO label16
+GOTO label17
+LABEL label16 :
+t34 := #4 * v11
+t35 := v7 + t34
+*t35 := v14
+t36 := #4 * v14
+t37 := v8 + t36
+*t37 := #0
+v17 := #0
+LABEL label20 :
+t38 := v12 - #1
+IF v17 < t38 GOTO label21
+GOTO label22
+LABEL label21 :
+t39 := #4 * v17
+t40 := &v15 + t39
+t41 := v17 + #1
+t42 := #4 * t41
+t43 := v9 + t42
+*t40 := *t43
+t44 := v17 + #1
+v17 := t44
+GOTO label20
+LABEL label22 :
+t45 := v12 - #1
+t46 := #4 * t45
+t47 := &v15 + t46
+*t47 := #1
+IF v14 != #0 GOTO label23
+GOTO label24
+LABEL label23 :
+t48 := v14 - #1
+t49 := #4 * t48
+t50 := &v15 + t49
+*t50 := #0
+LABEL label24 :
+t51 := v12 - #1
+v17 := t51
+LABEL label25 :
+IF v17 > #0 GOTO label26
+GOTO label27
+LABEL label26 :
+t52 := #4 * v17
+t53 := &v16 + t52
+t54 := v17 - #1
+t55 := #4 * t54
+t56 := v10 + t55
+*t53 := *t56
+t57 := v17 - #1
+v17 := t57
+GOTO label25
+LABEL label27 :
+t58 := #4 * #0
+t59 := &v16 + t58
+*t59 := #1
+t60 := v12 - #1
+IF v14 != t60 GOTO label28
+GOTO label29
+LABEL label28 :
+t61 := v14 + #1
+t62 := #4 * t61
+t63 := &v16 + t62
+*t63 := #0
+LABEL label29 :
+t70 := v11 + #1
+ARG v13
+ARG v12
+ARG t70
+ARG &v16
+ARG &v15
+ARG v8
+ARG v7
+t64 := CALL dfs
+t73 := #4 * v14
+t74 := v8 + t73
+*t74 := #1
+LABEL label17 :
+t75 := v14 + #1
+v14 := t75
+GOTO label13
+LABEL label15 :
+RETURN #0
+FUNCTION main :
+DEC *v18 40
+DEC *v20 4
+DEC *v21 40
+DEC *v22 40
+DEC *v23 40
+v24 := #0
+READ t76
+v19 := t76
+IF v19 == #0 GOTO label30
+GOTO label32
+LABEL label32 :
+IF v19 > #10 GOTO label30
+GOTO label31
+LABEL label30 :
+RETURN #0
+LABEL label31 :
+LABEL label33 :
+IF v24 < v19 GOTO label34
+GOTO label35
+LABEL label34 :
+t77 := #4 * v24
+t78 := &v21 + t77
+*t78 := #1
+t79 := #4 * v24
+t80 := &v22 + t79
+*t80 := #1
+t81 := #4 * v24
+t82 := &v23 + t81
+*t82 := #1
+t83 := v24 + #1
+v24 := t83
+GOTO label33
+LABEL label35 :
+t84 := #4 * #0
+t85 := &v20 + t84
+*t85 := #0
+ARG &v20
+ARG v19
+ARG #0
+ARG &v23
+ARG &v22
+ARG &v21
+ARG &v18
+t86 := CALL dfs
+t96 := #4 * #0
+t97 := &v20 + t96
+WRITE *t97
+RETURN #0
