@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include "common.h"
-#include "semantic.h"
-#include "InterCode.h"
+// #include "semantic.h"
+// #include "InterCode.h"
 #include "objectCode.h"
 
 extern FILE* yyin;
@@ -9,6 +9,7 @@ extern int yylex();
 extern int yyparse();
 extern int yyrestart(FILE *);
 extern char* codeFileName;
+extern char* compileFileName;
 
 //version 1
 int main(int argc, char ** argv){
@@ -19,14 +20,15 @@ int main(int argc, char ** argv){
 		perror(argv[1]);
 		return 1;
 	}
-	codeFileName =  argv[2];
+	codeFileName =  argv[2]; 	//Lab3 中间代码生成
+	compileFileName =  argv[3]; //Lab4 汇编代码生成
 	//start parse
 	ErrorFlag = 0;
 	yyrestart(f);
 	// yylex(); //using yyparse rather than yylex()
 	yyparse();
 	fclose(f);
-	if( ErrorFlag == 0){
+	if(ErrorFlag == 0){
 		//printGramTree(treeRoot,0);	//if has no error test senamatic
 		printPhase("Grammar Tree Printf End");
 		semanticParse(treeRoot);

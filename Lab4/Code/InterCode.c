@@ -887,7 +887,6 @@ char* getOperand(Operand op, int opKind){
         printError("getOperand:op == NULL");
     }
     char* opName = getName(op);
-    // printError(opName);
     char* ret = malloc(30);
     switch (opKind)
     {
