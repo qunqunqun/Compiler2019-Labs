@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "typeinfo": "c",
-        "B_3.C": "cpp"
+        "B_3.C": "cpp",
+        "objectcode.h": "c",
+        "intercode.h": "c"
     }
 }
