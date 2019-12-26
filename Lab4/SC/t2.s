@@ -29,6 +29,10 @@ sw $fp, 0($sp)
 addi $fp, $sp, 8
 subu $sp, $sp, 156
 move $t0, $a0
+subu $v0, $fp, 12
+sw $t0, 0($v0)
+subu $v0, $fp, 12
+lw $t0, 0($v0)
 beq $t0 1 label0
 subu $v0, $fp, 12
 sw $t0, 0($v0)
@@ -89,11 +93,15 @@ lw $ra, 0($sp)
 addi $sp, $sp, 4
 move $t0, $v0
 move $t1, $t0
-bgt $t1 1 label3
 subu $v0, $fp, 12
 sw $t0, 0($v0)
 subu $v0, $fp, 16
 sw $t1, 0($v0)
+subu $v0, $fp, 16
+lw $t0, 0($v0)
+bgt $t0 1 label3
+subu $v0, $fp, 16
+sw $t0, 0($v0)
 j label4
 label3:
 subu $v0, $fp, 16

@@ -407,6 +407,14 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
     
     case RELOP_IR: { //RELOP指令
         WarnMsg("Start Relop\n");
+        //首先收回内存，清空寄存器收回内存
+        Var h = FuncList;		
+		while(h != NULL) {
+			if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
+                flushReg(h);
+            }
+            h = h->next;
+        }
         Operand op_left = Code->code->u.relop.x;
         Operand op_right = Code->code->u.relop.y;
         char * leftname = getNameFromOperand(op_left, Code->code->opKind);
