@@ -12,6 +12,7 @@ syscall
 jr $ra
 
 write:
+li $v0, 1
 syscall
 li $v0, 4
 la $a0, _ret
@@ -29,31 +30,24 @@ jal read
 lw $ra, 0($sp)
 addi $sp, $sp, 4
 move $t3, $v0
-move  $t4, $t3
+move $t4, $t3
 label0:
-subu $v0, $fp, 12
-lw $t5, 0($v0)
-subu $v0, $fp, 20
-lw $t6, 0($v0)
-blt $t5 $t6 label1
+blt $t2 $t4 label1
 j label2
 label1:
-subu $v0, $fp, 4
-lw $t8, 0($v0)
-subu $v0, $fp, 8
-lw $t9, 0($v0)
-add $t7, $t8, $t9
-move  $s0, $t7
+add $t5, $t0, $t1
+move $t6, $t5
+move $a0, $t1
 addi $sp, $sp, -4
 sw $ra, 0($sp)
-jal wrtie
+jal write
 lw $ra, 0($sp)
 addi $sp, $sp, 4
-move  $t8, $t9
-move  $t9, $s0
-subu $v0, $fp, 12
-lw $s2, 0($v0)
-addi $s1, $s2, 1
-move  $s2, $s1
+move $t0, $t1
+move $t1, $t6
+addi $t7, $t2, 1
+move $t2, $t7
 j label0
 label2:
+li $v0, 0
+jr $ra

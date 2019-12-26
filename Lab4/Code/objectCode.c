@@ -36,7 +36,8 @@ void wrtieInitCode(){
         fprintf(fileop,"syscall\n");
         fprintf(fileop,"jr $ra\n\n");
         //write
-        fprintf(fileop,"write:\n");        
+        fprintf(fileop,"write:\n");    
+        fprintf(fileop,"li $v0, 1\n");    
         fprintf(fileop,"syscall\n");        
         fprintf(fileop,"li $v0, 4\n");
         fprintf(fileop,"la $a0, _ret\n");
@@ -188,7 +189,7 @@ void flushReg(Var t) {
     int RegIndex = t->isUsingReg;
     t->isUsingReg = -1;
     //将寄存器的值写回
-    if(t->isUsingReg != -1) {
+    if(RegIndex != -1) {
         if(myReg[RegIndex].isModified == false) return; //未被修改过 
         myReg[RegIndex].isVaiable = true;
         myReg[RegIndex].LastUsedTime = 0;
@@ -208,7 +209,9 @@ void objectCode(InterCodes codes){
     wrtieInitCode();
     //逐条翻译各语句
     InterCodes tempcode = codes;
-    while (tempcode ->next != codes)
+    TranslateInterCode(tempcode);
+    tempcode = tempcode->next;
+    while (tempcode != codes)
     {
         CurTime += 1; //时间加一
         printf("\nCurTime:%d\n",CurTime);
@@ -224,22 +227,24 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
     switch (codekind) {
     case LABLE_IR:{ 
         //将寄存器刷回内存 ?
-        Var h = FuncList;		
-		while(h != NULL) {
-			if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
-                flushReg(h);
-            }
-            h = h->next;
-        }
+        // Var h = FuncList;		
+		// while(h != NULL) {
+		// 	if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
+        //         flushReg(h);
+        //     }
+        //     h = h->next;
+        // }
         //输出标签号
         fprintf(fileop,"label%d:\n",Code->code->labelNo);
         break;
     }
 
     case FUNC_IR: {
+        //TODO栈的管理
         fprintf(fileop,"%s:\n",Code->code->u.single.funcName);//输出函数名称
-        FuncList = NULL; //清空使用变量
-        int ArgCount = 0;    //函数的参数的个数
+        FuncList = NULL;   //清空使用变量
+        ArgCount = 0;      //函数的参数的个数
+        global_offset = 8; //预先是8，因为有两个固定
         InterCodes head = Code;
         while (head->code->kind == PARAM_IR)
         {
@@ -262,7 +267,7 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
                 fprintf(fileop,"li  $%s, %d\n", myReg[RegIndex_Left].name, right->u.value);
             } else if(right->kind == VARIABLE || right->kind == TEMP) { //地址
                 int RegIndex_Right = findReg(rightname);
-                fprintf(fileop,"move  $%s, $%s\n", myReg[RegIndex_Left].name, myReg[RegIndex_Right].name);
+                fprintf(fileop,"move $%s, $%s\n", myReg[RegIndex_Left].name, myReg[RegIndex_Right].name);
             } else if(right->kind == ADDRESS) {
                 WarnMsg("ADDRESS!");
                 int RegIndex_Right = findReg(rightname);
@@ -403,9 +408,22 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         break;
     }
 
-    case RETURN_IR:
-        /* code */
+    case RETURN_IR: { //返回指令
+        WarnMsg("RETURN IR\n");
+        Operand op = Code->code->u.single.op;
+        char* name = getOperand(op,Code->code->kind);
+        int regIndex = DivByType(name,op);
+        if(regIndex == -1) {
+            fprintf(fileop,"li $v0, ");
+            fprintf(fileop,"%d\n",op->u.value);
+        } else {
+            fprintf(fileop,"move $v0, ");
+            fprintf(fileop,"$%s\n",myReg[regIndex].name);
+        }
+        fprintf(fileop,"jr $ra\n");
+        //TODO栈的管理
         break;
+    }
 
     case DEC_IR:
         /* code */
@@ -436,10 +454,14 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         break;  
     }
 
-    case WRITE_IR:{ //写寄存器
+    case WRITE_IR: { //写寄存器
+        Operand op = Code->code->u.single.op;
+        char* name = getOperand(op,Code->code->opKind);
+        int RegIndex = DivByType(name,op);
+        fprintf(fileop,"move $a0, $%s\n",myReg[RegIndex].name);
         fprintf(fileop,"addi $sp, $sp, -4\n");
         fprintf(fileop,"sw $ra, 0($sp)\n"); 
-        fprintf(fileop,"jal wrtie\n"); 
+        fprintf(fileop,"jal write\n"); 
         fprintf(fileop,"lw $ra, 0($sp)\n"); 
         fprintf(fileop,"addi $sp, $sp, 4\n"); 
         //TODO: if necessary do sth
@@ -474,5 +496,4 @@ int DivByType(char* name,Operand op) {
         fprintf(fileop,"move $%s, 0($%s)\n",myReg[DestReg].name, myReg[TempIndex].name);
         return DestReg; //返回地址得值
     }
-
 }

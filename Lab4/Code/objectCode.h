@@ -37,6 +37,7 @@ void wrtieInitCode();           //初始化必要的文件头
 void TranslateInterCode(InterCodes code);   //转换一条语句
 char* NumberToChar(int value);
 int DivByType(char* name,Operand op);
+
 //主函数
 void objectCode(InterCodes codes);
 
