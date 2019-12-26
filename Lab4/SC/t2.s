@@ -38,13 +38,13 @@ subu $v0, $fp, 12
 sw $t0, 0($v0)
 j label1
 label0:
+subu $v0, $fp, 12
+lw $t0, 0($v0)
 subu $sp, $fp, 8
 lw $fp, 0($sp)
 addi $sp, $sp, 4
 lw $ra, 0($sp)
 addi $sp, $sp, 4
-subu $v0, $fp, 12
-lw $t0, 0($v0)
 move $v0, $t0
 jr $ra
 subu $v0, $fp, 12

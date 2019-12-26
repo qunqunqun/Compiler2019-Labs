@@ -476,14 +476,14 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
     case RETURN_IR: { //返回指令
         WarnMsg("RETURN IR\n");
         //栈管理
+        Operand op = Code->code->u.single.op;
+        char* name = getOperand(op,Code->code->kind);
+        int regIndex = DivByType(name,op);
 		fprintf(fileop,"subu $sp, $fp, 8\n");
 		fprintf(fileop,"lw $fp, 0($sp)\n");
 		fprintf(fileop,"addi $sp, $sp, 4\n");
 		fprintf(fileop,"lw $ra, 0($sp)\n");
 		fprintf(fileop,"addi $sp, $sp, 4\n");
-        Operand op = Code->code->u.single.op;
-        char* name = getOperand(op,Code->code->kind);
-        int regIndex = DivByType(name,op);
         if(regIndex == -1) {
             fprintf(fileop,"li $v0, ");
             fprintf(fileop,"%d\n",op->u.value);
