@@ -50,7 +50,7 @@ label1:
 subu $v0, $fp, 12
 lw $t1, 0($v0)
 addi $t0, $t1, -1
-move $a1, $t0
+move $a0, $t0
 subu $v0, $fp, 12
 sw $t1, 0($v0)
 subu $v0, $fp, 16
@@ -98,7 +98,7 @@ j label4
 label3:
 subu $v0, $fp, 16
 lw $t0, 0($v0)
-move $a1, $t0
+move $a0, $t0
 subu $v0, $fp, 16
 sw $t0, 0($v0)
 jal fact

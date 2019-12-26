@@ -515,13 +515,13 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
             if(ArgIndex == -1) { //数字给新的寄存器
                 ArgIndex = newArgToNum(op);
             }
-            if(ArgCnt == 0) {
+            if(i == 0) {
                 fprintf(fileop,"move $a0, $%s\n",myReg[ArgIndex].name);
-            } else if(ArgCnt == 1) {
+            } else if(i == 1) {
                 fprintf(fileop,"move $a1, $%s\n",myReg[ArgIndex].name);
-            } else if(ArgCnt == 2) {
+            } else if(i == 2) {
                 fprintf(fileop,"move $a2, $%s\n",myReg[ArgIndex].name);
-            } else if(ArgCnt == 3) {
+            } else if(i == 3) {
                 fprintf(fileop,"move $a3, $%s\n",myReg[ArgIndex].name);
             }
             i++; 
