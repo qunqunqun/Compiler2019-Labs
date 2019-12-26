@@ -31,65 +31,65 @@ GOTO label7
 LABEL label6 :
 RETURN v4
 LABEL label7 :
--2125929079 := #0
-t8 := #4 * v2
-t9 := &v1 + t8
-IF v5 > *t9 GOTO label15
+t8 := #0
+t9 := #4 * v2
+t10 := &v1 + t9
+IF v5 > *t10 GOTO label15
 GOTO label13
 LABEL label15 :
-t10 := #4 * v2
-t11 := &v1 + t10
-IF v0 >= *t11 GOTO label14
+t11 := #4 * v2
+t12 := &v1 + t11
+IF v0 >= *t12 GOTO label14
 GOTO label13
 LABEL label14 :
 IF v0 < v5 GOTO label12
 GOTO label13
 LABEL label12 :
--2125929079 := #1
+t8 := #1
 LABEL label13 :
-IF -2125929079 != #0 GOTO label8
+IF t8 != #0 GOTO label8
 GOTO label11
 LABEL label11 :
--2125929079 := #0
-t12 := #4 * v2
-t13 := &v1 + t12
-IF v5 < *t13 GOTO label18
-GOTO label17
-LABEL label18 :
-*t13 := #0
+t13 := #0
 t14 := #4 * v2
 t15 := &v1 + t14
-IF v0 >= *t15 GOTO label19
+IF v5 < *t15 GOTO label18
+GOTO label17
+LABEL label18 :
+t16 := #0
+t17 := #4 * v2
+t18 := &v1 + t17
+IF v0 >= *t18 GOTO label19
 GOTO label21
 LABEL label21 :
 IF v0 < v5 GOTO label19
 GOTO label20
 LABEL label19 :
-*t13 := #1
+t16 := #1
 LABEL label20 :
-IF *t13 != #0 GOTO label16
+IF t16 != #0 GOTO label16
 GOTO label17
 LABEL label16 :
--2125929079 := #1
+t13 := #1
 LABEL label17 :
-IF -2125929079 != #0 GOTO label8
+IF t13 != #0 GOTO label8
 GOTO label9
 LABEL label8 :
-t16 := v4 - #1
-v3 := t16
+t19 := v4 - #1
+v3 := t19
 GOTO label10
 LABEL label9 :
-t17 := v4 + #1
-v2 := t17
+t20 := v4 + #1
+v2 := t20
 LABEL label10 :
 GOTO label3
 LABEL label5 :
-t18 := #0 - #1
-RETURN t18
+t21 := #0 - #1
+RETURN t21
 FUNCTION main :
-READ t19
-v7 := t19
+READ t22
+v7 := t22
 ARG v7
-t22 := CALL search
-WRITE t22
+t25 := CALL search
+WRITE t25
 RETURN #0

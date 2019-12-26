@@ -3,7 +3,7 @@
 int globalLabelIndex = -1;
 int globalTempIndex = -1;
 
-int is_iPrint = false;
+int is_iPrint = true;
 //工具人函数
 void iPrintPhase(char * msg){
     //return;
@@ -204,7 +204,6 @@ InterCodes translate_Dec(GramTree* root){
         c1 = getDecCode(op, tempsize); //#BUGGGGGG
         //printf("is FINISHED?\n");
     }
-    //printf("is FINISHED?\n");
     if(root->nChild == 3){
         printError("186");
         int isAddr = false;
@@ -263,7 +262,7 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         root = root->child[0];
         // | ID
         if(isEqual(root->tag,"ID")){
-            //printf("ID:%s, root->symIndex = %d\n",root->val.str,root->symIndex);
+            printf("ID:%s, root->symIndex = %d\n",root->val.str,root->symIndex);
             SymbolElem symbol = findFromList(root->symIndex);
             int isAddr = false;
             if(symbol->u.var->kind != BASIC && symbol->isParam == true){
@@ -303,7 +302,6 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         InterCodes ExpCodes2 = translate_Exp(root->child[2], &t2); 
         InterCodes asCodes = getAssignopCode(t1,t2,VAL_OP);
         return link3Codes(ExpCodes1,ExpCodes2,asCodes);
-
     }
     else if( n==3 && (   
                 isEqual(root->child[1]->tag,"PLUS")||
@@ -345,16 +343,17 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         
         int label1 = getNewLabel();
         int label2 = getNewLabel();
+        Operand res = getTemp(0);
+        *place = res;
         Operand t0 = getConst(0);
         Operand t1 = getConst(1);
-        InterCodes code0 = getAssignopCode(*place, t0, VAL_OP);
+        InterCodes code0 = getAssignopCode(res, t0, VAL_OP);
         InterCodes code1 = translate_Cond(root, label1, label2);
-        InterCodes code2 = link2Codes(
-                                getLabelCode(label1), 
-                                getAssignopCode(*place, t1, VAL_OP));
-
-        return link4Codes(code0, code1, code2, getLabelCode(label2));
-
+        InterCodes label1_ = getLabelCode(label1);
+        InterCodes codeas = getAssignopCode(res, t1, VAL_OP);
+        InterCodes code2 = link2Codes(label1_, codeas);
+        InterCodes label2_ = getLabelCode(label2);
+        return link4Codes(code0, code1, code2, label2_);
     }else if(
             isEqual(root->child[0]->tag,"LP")&&
             isEqual(root->child[1]->tag,"Exp")&&
@@ -638,8 +637,9 @@ InterCodes translate_Cond(GramTree*root, int label_true, int label_false){
         //到最后面
     }
     Operand t1;
+    Operand z = getConst(0);
     InterCodes code1 = translate_Exp(root, &t1);
-    InterCodes relopCodes = getRelopCode("!=", t1, getConst(0), label_true);
+    InterCodes relopCodes = getRelopCode("!=", t1, z, label_true);
     InterCodes gotoCodes = getGotoCode(label_false);
     return link3Codes(
         code1,
@@ -899,7 +899,7 @@ char* getOperand(Operand op, int opKind){
         }
         break;
     case VAL_OP:
-        if(op->isAddr == VAL_OP){
+        if(op->isAddr == true){
             char tmp[20] = "*";
             strcat(tmp, opName);
             strcpy(ret, tmp);
@@ -924,8 +924,11 @@ char* getName(Operand op){
         case VARIABLE: strcpy(opName,"v"); break;
         case TEMP: opName = strcpy(opName,"t"); break;
         case CONSTANT: opName = strcpy(opName,"#"); break;
-    default:
-        break;
+        case ADDRESS: break;
+        default:
+            printf("%d ,%d ,%d !!!!\n",op->kind,op->u.value,op->isAddr);
+            assert(0);
+            break;
     }
     char index[30];
     sprintf(index, "%d" , op->u.value);
@@ -941,6 +944,7 @@ int getNewLabel(){
 
 // TODO: 后期可以定向到文件流中输出文件，目前先打印调试
 void printInterCode(InterCode code){
+    printf("code kind:%d\n",code->kind);
     switch (code->kind) {
         case LABLE_IR:
             printf("LABEL label%d :\n", code->labelNo);

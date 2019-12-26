@@ -9,14 +9,25 @@ Reg myReg[MAX_REGNUM];      //regNUM
 // $28 $gp (Global Pointer) 指向静态数据段64K内存空间的中部
 // $29 $sp (Stack Pointer) 栈顶指针
 Var FuncList = NULL;//函数的
-int ArgCount = 0;       //函数的参数个数
-int ADDRcount = 0;       //这个变量主要用于地址转换得寄存器寻址名称
+int ArgCnt = 0;       //函数的参数个数
+int ADDRcount = 0;      //这个变量主要用于地址转换得寄存器寻址名称
+int NumberCount = 0;    //这个变量主要用于数字转换得寄存器寻址名称
 //工具人函数
 void WarnMsg(char * msg){
     if(is_iPrint_lab4){
         printf("\033[31m %s \033[0m\n", msg);
     }
     return;
+}
+
+int ConutOfInterCode(InterCodes Code) { //一个函数的多少语句
+    int t = 0;
+    Code = Code->next;
+    while(Code->code->kind != FUNC_IR) {
+        t++;
+        Code = Code->next;
+    }
+    return t;
 }
 
 void wrtieInitCode(){
@@ -101,7 +112,7 @@ char * getNameFromOperand(Operand op,int opKind) {
     
 }
 
-int getReg(){
+int getReg() {
     printf("Start find Reg!\n");
     for(int i = 8; i <= 25; i++) {
         if(myReg[i].isVaiable == true) {
@@ -189,8 +200,7 @@ void flushReg(Var t) {
     int RegIndex = t->isUsingReg;
     t->isUsingReg = -1;
     //将寄存器的值写回
-    if(RegIndex != -1) {
-        if(myReg[RegIndex].isModified == false) return; //未被修改过 
+    if(RegIndex != -1) { 
         myReg[RegIndex].isVaiable = true;
         myReg[RegIndex].LastUsedTime = 0;
         myReg[RegIndex].varialbe = NULL;
@@ -227,29 +237,63 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
     switch (codekind) {
     case LABLE_IR:{ 
         //将寄存器刷回内存 ?
-        // Var h = FuncList;		
-		// while(h != NULL) {
-		// 	if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
-        //         flushReg(h);
-        //     }
-        //     h = h->next;
-        // }
+        Var h = FuncList;		
+		while(h != NULL) {
+			if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
+                flushReg(h);
+            }
+            h = h->next;
+        }
         //输出标签号
         fprintf(fileop,"label%d:\n",Code->code->labelNo);
         break;
     }
 
     case FUNC_IR: {
-        //TODO栈的管理
-        fprintf(fileop,"%s:\n",Code->code->u.single.funcName);//输出函数名称
-        FuncList = NULL;   //清空使用变量
-        ArgCount = 0;      //函数的参数的个数
+        //TODO:栈的管理
+        WarnMsg("Finish FUNC\n");
+        fprintf(fileop,"\n%s:\n",Code->code->u.single.funcName);//输出函数名称
+        FuncList = NULL;   //TODO:不能直接NULL,记得释放变量熬
         global_offset = 8; //预先是8，因为有两个固定
-        InterCodes head = Code;
-        while (head->code->kind == PARAM_IR)
-        {
+        //进入函数首先需要保存好这两个东西
+        fprintf(fileop,"subu $sp, $sp, 4\n"); 
+		fprintf(fileop,"sw $ra, 0($sp)\n");
+		fprintf(fileop,"subu $sp, $sp, 4\n");
+		fprintf(fileop,"sw $fp, 0($sp)\n");
+		fprintf(fileop,"addi $fp, $sp, 8\n");
+        //栈的预分配空间，除了数组和Struct需要额外分配空间
+        int t = ConutOfInterCode(Code);
+        printf("this func's number code:%d\n",t);
+        int size = t * 4 * 3;
+        fprintf(fileop,"subu $sp, $sp, %d\n",size);
+        //进行处理参数
+        InterCodes pa = Code->next;
+        int ArgCount = 0;      //函数的参数的个数
+        while (pa->code->kind == PARAM_IR && ArgCount < 4) {//小于4的时候进行处理，从ax加载
+            WarnMsg("PARAM_IR\n");
+            Operand op = pa->code->u.single.op;
+            char* name = getName(op);
+            printf("!!!%s,%d\n",name,op->kind);
+            int ArgIndex = findReg(name);
+            if(ArgCount == 0) {
+                fprintf(fileop,"move $%s, $a0\n",myReg[ArgIndex].name);
+            } else if(ArgCount == 1){
+                fprintf(fileop,"move $%s, $a1\n",myReg[ArgIndex].name);
+            } else if(ArgCount == 2){
+                fprintf(fileop,"move $%s, $a2\n",myReg[ArgIndex].name);
+            } else if(ArgCount == 3){
+                fprintf(fileop,"move $%s, $a3\n",myReg[ArgIndex].name);
+            }
             ArgCount++;
-            head = head->next;
+            pa = pa->next;
+        }
+        while (pa->code->kind == PARAM_IR) {
+            char* name = getOperand(pa->code->u.single.op,pa->code->opKind);
+            int ArgIndex = findReg(name);
+            int of = (ArgCount - 4) * 4;
+            fprintf(fileop,"lw $%s, %d($fp)\n",myReg[ArgIndex].name,of);
+            ArgCount++;
+            pa = pa->next;
         }
         WarnMsg("Finish FUNC\n");
         break;
@@ -349,6 +393,14 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
     }
 
     case GOTO_IR: { //转移控制指令
+        //将寄存器刷回内存 ?
+        Var h = FuncList;		
+		while(h != NULL) {
+			if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
+                flushReg(h);
+            }
+            h = h->next;
+        }
         fprintf(fileop,"j label%d\n",Code->code->labelNo);
         break;
     }
@@ -370,7 +422,12 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
             strcpy(comp,"blt");
         } else if(isEqual(RelopType,"<=")) {
             strcpy(comp,"ble");
-        } else {
+        } else if(isEqual(RelopType,"==")) {
+            strcpy(comp,"beq");
+        }  else if(isEqual(RelopType,"!=")) {
+            strcpy(comp,"bne");
+        }  else {
+            printf("Relop type:%s\n",RelopType);
             assert(0);
         }
         //打印左边
@@ -410,6 +467,12 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
 
     case RETURN_IR: { //返回指令
         WarnMsg("RETURN IR\n");
+        //栈管理
+		fprintf(fileop,"subu $sp, $fp, 8\n");
+		fprintf(fileop,"lw $fp, 0($sp)\n");
+		fprintf(fileop,"addi $sp, $sp, 4\n");
+		fprintf(fileop,"lw $ra, 0($sp)\n");
+		fprintf(fileop,"addi $sp, $sp, 4\n");
         Operand op = Code->code->u.single.op;
         char* name = getOperand(op,Code->code->kind);
         int regIndex = DivByType(name,op);
@@ -421,25 +484,94 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
             fprintf(fileop,"$%s\n",myReg[regIndex].name);
         }
         fprintf(fileop,"jr $ra\n");
-        //TODO栈的管理
         break;
     }
 
-    case DEC_IR:
-        /* code */
+    case DEC_IR: { 
+        Operand op = Code->code->u.dec.op;
+        int decSize = Code->code->u.dec.decSize;
+        char* name = getOperand(op,Code->code->opKind);
+        int index = findReg(name);
+        //拓展栈的大小
+        fprintf(fileop,"subu $sp, $sp, %d\n",decSize * 4);
+        //offset需要加 (decsize - 1) * 4
+        global_offset += (decSize - 1) * 4; 
         break;
+    }
 
-    case ARG_IR:
-        /* code */
+    case ARG_IR:{ //参数声明,开始遍历所有的参数
+        ArgCnt++;
         break;
+    }
 
-    case CALL_IR:
-        /* code */
+    case CALL_IR:{ //最复杂
+        //开始找参数
+        InterCodes Arg = Code->prev;
+        int i = 0;
+        while (i < ArgCnt && i < 4 && Arg->code->kind == ARG_IR) { //参数
+            Operand op = Arg->code->u.single.op;
+            char* name = getOperand(op, Arg->code->opKind);
+            int ArgIndex = DivByType(name,op);
+            if(ArgIndex == -1) { //数字给新的寄存器
+                ArgIndex = newArgToNum(op);
+            }
+            if(ArgCnt == 0) {
+                fprintf(fileop,"move $a0, $%s\n",myReg[ArgIndex].name);
+            } else if(ArgCnt == 1) {
+                fprintf(fileop,"move $a1, $%s\n",myReg[ArgIndex].name);
+            } else if(ArgCnt == 2) {
+                fprintf(fileop,"move $a2, $%s\n",myReg[ArgIndex].name);
+            } else if(ArgCnt == 3) {
+                fprintf(fileop,"move $a3, $%s\n",myReg[ArgIndex].name);
+            }
+            i++; 
+            Arg = Arg->prev;
+        }
+        if(ArgCnt > 4) { //溢出，写到内存中
+            //首先开辟内存块
+            int size = (ArgCnt - i) * 4;
+            fprintf(fileop,"subu $sp, %d\n",size);
+            while(i < ArgCnt) { 
+                Operand op = Arg->code->u.single.op;
+                char* name = getOperand(op, Arg->code->opKind);
+                int ArgIndex = DivByType(name,op);
+                if(ArgIndex == -1) { //数字给新的寄存器
+                    ArgIndex = newArgToNum(op);
+                }
+                fprintf(fileop,"sw $%s, %d($sp)\n",myReg[ArgIndex].name,(i - 4) * 4);
+                i++;
+                Arg = Arg->prev;
+            }
+        }
+        //首先收回内存，清空寄存器收回内存
+        Var h = FuncList;		
+		while(h != NULL) {
+			if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
+                flushReg(h);
+            }
+            h = h->next;
+        }
+        ArgCnt = 0; //清空参数
+        Operand x = Code->code->u.single.op;
+        fprintf(fileop,"jal %s\n",Code->code->u.single.funcName); //跳转函数
+        //栈管理
+        if(i > 4) {
+            fprintf(fileop,"addi $sp, $sp, %d\n",(i - 4) * 4); //参数的要加上
+        }
+        //返回值赋值
+        if(x != NULL) {
+            WarnMsg("x := CALL f");
+            char* n = getOperand(x,Code->code->opKind);
+            int RegIndex = DivByType(n,x);
+            assert(RegIndex != -1);
+            fprintf(fileop,"move $%s, $v0\n",myReg[RegIndex].name);
+        }
         break;
-
-    case PARAM_IR:
-        /* code */
+    }
+    case PARAM_IR:{
+        //函数声明的时候已经处理过
         break;
+    }
 
     case READ_IR:{ //读寄存器
         fprintf(fileop,"addi $sp, $sp, -4\n");
@@ -467,12 +599,10 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         //TODO: if necessary do sth
         break;  
     }
-
     default:
+        assert(0);
         break;
     }
-
-
 }
 
 char* NumberToChar(int value) {
@@ -488,12 +618,24 @@ int DivByType(char* name,Operand op) {
         int index = findReg(name);
         return index; 
     } else if(op->kind == ADDRESS) {
+        ADDRcount++;
         int TempIndex = findReg(name); //获得地址值
         char temp[32];
-        strcpy(temp,"ADDR");
+        strcpy(temp,"ADDR_");
         strcat(temp,NumberToChar(ADDRcount));
         int DestReg = findReg(temp);   //获得下一个寄存器，移动
         fprintf(fileop,"move $%s, 0($%s)\n",myReg[DestReg].name, myReg[TempIndex].name);
         return DestReg; //返回地址得值
     }
+}
+
+int newArgToNum(Operand op) { //给数字，数字首先加载到寄存器中
+    assert(op->kind == CONSTANT);
+    NumberCount++;
+    char temp[32];
+    strcpy(temp,"NUMB_");
+    strcat(temp,NumberToChar(NumberCount));
+    int DestReg = findReg(temp);   //获得下一个寄存器，移动
+    fprintf(fileop,"lw $%s, %d\n",myReg[DestReg].name, op->u.value);
+    return DestReg; //返回地址得值
 }
