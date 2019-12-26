@@ -3,6 +3,7 @@
         "typeinfo": "c",
         "B_3.C": "cpp",
         "objectcode.h": "c",
-        "intercode.h": "c"
+        "intercode.h": "c",
+        "type_traits": "c"
     }
 }
