@@ -12,6 +12,7 @@ Var FuncList = NULL;//函数的
 int ArgCnt = 0;       //函数的参数个数
 int ADDRcount = 0;      //这个变量主要用于地址转换得寄存器寻址名称
 int NumberCount = 0;    //这个变量主要用于数字转换得寄存器寻址名称
+InterCodes CurCode = NULL;
 //工具人函数
 void WarnMsg(char * msg){
     if(is_iPrint_lab4){
@@ -28,6 +29,14 @@ int ConutOfInterCode(InterCodes Code) { //一个函数的多少语句
         Code = Code->next;
     }
     return t;
+}
+
+void refreshReg() {
+    for(int i = 8; i <= 25; i++) {
+        myReg[i].isVaiable = true;
+        myReg[i].LastUsedTime = 0;
+        myReg[i].varialbe = NULL;
+    }   
 }
 
 void wrtieInitCode(){
@@ -95,16 +104,12 @@ void InsertIntoList(Var a){
 
 char * getNameFromOperand(Operand op,int opKind) {
     if(op->kind == CONSTANT) {
-        int val = op->u.value;
-        char *temp = malloc(sizeof(char) * 32);
-		memset(temp,0,32);
-		sprintf(temp, "%d", val);
-        return temp;
-    } else if(op->kind == VARIABLE || op->kind == TEMP) {
+        return NULL;
+    } else if(op->isAddr == false) {
         char *name = getOperand(op,opKind);
         return name;
-    } else if(op->kind == ADDRESS) {
-        char *name = getOperand(op,opKind);
+    } else if(op->isAddr == true) {
+        char *name = getName(op);
         return name;
     } else {
         assert(0);
@@ -218,13 +223,16 @@ void objectCode(InterCodes codes){
     //初始化先写入固定的code
     wrtieInitCode();
     //逐条翻译各语句
+    printf("\nCurTime:%d\n",CurTime);
     InterCodes tempcode = codes;
+    CurCode = tempcode;
     TranslateInterCode(tempcode);
     tempcode = tempcode->next;
     while (tempcode != codes)
     {
         CurTime += 1; //时间加一
         printf("\nCurTime:%d\n",CurTime);
+        CurCode = tempcode;
         TranslateInterCode(tempcode); 
         tempcode = tempcode->next;
     }
@@ -254,6 +262,7 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         WarnMsg("Finish FUNC\n");
         fprintf(fileop,"\n%s:\n",Code->code->u.single.funcName);//输出函数名称
         FuncList = NULL;   //TODO:不能直接NULL,记得释放变量熬
+        refreshReg();
         global_offset = 8; //预先是8，因为有两个固定
         //进入函数首先需要保存好这两个东西
         fprintf(fileop,"subu $sp, $sp, 4\n"); 
@@ -273,7 +282,7 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
             WarnMsg("PARAM_IR\n");
             Operand op = pa->code->u.single.op;
             char* name = getName(op);
-            printf("!!!%s,%d\n",name,op->kind);
+            printf("!!!%s,%d,%d\n",name,pa->code->opKind,op->kind);
             int ArgIndex = findReg(name);
             if(ArgCount == 0) {
                 fprintf(fileop,"move $%s, $a0\n",myReg[ArgIndex].name);
@@ -288,7 +297,7 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
             pa = pa->next;
         }
         while (pa->code->kind == PARAM_IR) {
-            char* name = getOperand(pa->code->u.single.op,pa->code->opKind);
+            char* name = getName(pa->code->u.single.op);
             int ArgIndex = findReg(name);
             int of = (ArgCount - 4) * 4;
             fprintf(fileop,"lw $%s, %d($fp)\n",myReg[ArgIndex].name,of);
@@ -301,44 +310,44 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
     case ASSIGN_IR:{ 
         Operand left = Code->code->u.assign.left;   //获取左边
         Operand right = Code->code->u.assign.right; //获取右边
-        char *leftname = getOperand(left,Code->code->opKind);
-        char *rightname = getOperand(right,Code->code->opKind);
+        char *leftname = getNameFromOperand(left,Code->code->opKind); 
+        char *rightname = getNameFromOperand(right,Code->code->opKind);
         printf("assign Leftname:%s, rightName:%s\n",leftname,rightname);
-        int RegIndex_Left = findReg(leftname); //对左式进行寄存器的分配
-        if(left->kind == VARIABLE || left->kind == TEMP) {
+        int RegIndex_Left = findReg(leftname); //对左式进行寄存器的分配,特殊处理地址
+        if(left->isAddr == false) {
             if(right->kind == CONSTANT) { //常数
                 printf("leftRegNum = %d\n",RegIndex_Left);
                 fprintf(fileop,"li  $%s, %d\n", myReg[RegIndex_Left].name, right->u.value);
-            } else if(right->kind == VARIABLE || right->kind == TEMP) { //地址
+            } else if(right->isAddr == false) { //地址
                 int RegIndex_Right = findReg(rightname);
                 fprintf(fileop,"move $%s, $%s\n", myReg[RegIndex_Left].name, myReg[RegIndex_Right].name);
-            } else if(right->kind == ADDRESS) {
-                WarnMsg("ADDRESS!");
+            } else if(right->isAddr == true) {
                 int RegIndex_Right = findReg(rightname);
                 fprintf(fileop,"lw  $%s, 0($%s)\n", myReg[RegIndex_Left].name, myReg[RegIndex_Right].name);
             } else {
                 assert(0);
             }
-        } else if(left->kind == ADDRESS) {
-            if(right->kind == CONSTANT) { //常数
+        } else if(left->isAddr == true) { //地址
+            if(right->kind == CONSTANT) { 
                 printf("leftRegNum = %d\n",RegIndex_Left);
-                fprintf(fileop,"sw %d, 0($%s)\n", right->u.value, myReg[RegIndex_Left].name);
-            } else if(right->kind == VARIABLE || right->kind == TEMP) { //地址
-                int RegIndex_Right = findReg(rightname);
+                int RegIndex_Right= newArgToNum(right);
                 fprintf(fileop,"sw $%s, 0($%s)\n", myReg[RegIndex_Right].name, myReg[RegIndex_Left].name);
-            } else if(right->kind == ADDRESS) {
-                WarnMsg("ADDRESS!"); assert(0);
-                int RegIndex_Right = findReg(rightname);
+            } else if(right->isAddr == false) { //地址
+                int RegIndex_Right = DivByType(rightname,right,Code->code->opKind);
+                fprintf(fileop,"sw $%s, 0($%s)\n", myReg[RegIndex_Right].name, myReg[RegIndex_Left].name);
+            } else if(right->isAddr == true) {
+                int RegIndex_Right = DivByType(rightname,right,Code->code->opKind);
                 fprintf(fileop,"sw $%s, 0($%s)\n",  myReg[RegIndex_Right].name, myReg[RegIndex_Left].name);
             } else {
                 assert(0);
             }
         } else { assert(0); }
         //修改左值
-        myReg[RegIndex_Left].isModified = true;
+        //myReg[RegIndex_Left].isModified = true;
         break;
     }
     case ARITH_IR:{ //算术指令 x := y + z 加减乘除操作
+        WarnMsg("ARITH START!");
         Operand op_result = Code->code->u.binop.result;
         Operand op_left = Code->code->u.binop.op1;
         Operand op_right = Code->code->u.binop.op2;
@@ -354,46 +363,64 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         } else if(operation == '/') {
             strcpy(temp,"div");
         }
-        if(op_left->kind == CONSTANT || op_right->kind == CONSTANT) { //i
+        if(op_right->kind == CONSTANT &&  operation != '*' && operation != '/') { //i
             strcat(temp,"i");
         }
-        WarnMsg("please test if i can be appended!\n");
+        WarnMsg("please test if i can be appended!");
         printf("temp:%s\n",temp);
         if(op_right->kind == CONSTANT && isEqual(temp,"subi") == true) { //改变一下特殊处理
             isNeg = true;   
             strcpy(temp,"addi");
         }
         //进行判断
-        char* result_name = getOperand(op_result,Code->code->kind);
-        char* left_name = getOperand(op_left,Code->code->kind);
-        char* right_name = getOperand(op_right,Code->code->kind);
+        char* result_name = getNameFromOperand(op_result,Code->code->kind);
+        char* left_name = getNameFromOperand(op_left,Code->code->kind);
+        char* right_name = getNameFromOperand(op_right,Code->code->kind);
+        printf("res:%s,left:%s,right:%s\n",result_name,left_name,right_name);
         int reg_left,reg_right,reg_result;
-        //首先判断结果寄存器，不可能为常数，如果是地址需要改变
-        reg_result = DivByType(result_name,op_result);
+        //首先判断结果寄存器
+        reg_result = findReg(result_name);
         if(reg_result == -1) { assert(0); }
         //左边结果寄存器
-        reg_left = DivByType(left_name,op_left);
+        printf("!!!\n");
+        reg_left = DivByType(left_name,op_left,Code->code->opKind);
         //右边结果寄存器
-        reg_right = DivByType(right_name,op_right);
-        fprintf(fileop,"%s $%s, ",temp,myReg[reg_result].name);
-        if(reg_left == -1) {
-            fprintf(fileop,"%d, ",op_left->u.value);
-        } else {
+        reg_right = DivByType(right_name,op_right,Code->code->opKind);
+        if(operation == '+' || operation == '-') {
+             if(reg_left == -1) {
+                reg_left = newArgToNum(op_left);
+             }
+            fprintf(fileop,"%s $%s, ",temp,myReg[reg_result].name);
             fprintf(fileop,"$%s, ",myReg[reg_left].name);
-        }
-        if(reg_right == -1) {
-            if(isNeg == true) {
-                fprintf(fileop,"-");
+            if(reg_right == -1) {
+                if(isNeg == true) {
+                    fprintf(fileop,"-");
+                }
+                fprintf(fileop,"%d\n",op_right->u.value);
+            } else {
+                fprintf(fileop,"$%s\n",myReg[reg_right].name);
             }
-            fprintf(fileop,"%d\n",op_right->u.value);
-        } else {
-            fprintf(fileop,"$%s\n",myReg[reg_right].name);
+        } else { //除法特殊处理
+            if(reg_left == -1) {
+                reg_left = newArgToNum(op_left);
+            } 
+            if(reg_right == -1) {
+                reg_right = newArgToNum(op_right);
+            }
+            if(operation == '/') {
+                fprintf(fileop,"div $%s, $%s\n",myReg[reg_left].name,myReg[reg_right].name);
+                fprintf(fileop,"mflo $%s\n",myReg[reg_result].name);
+            } else if(operation == '*') {
+                fprintf(fileop,"mul $%s, $%s, $%s\n",myReg[reg_result].name,myReg[reg_left].name,myReg[reg_right].name);
+            }
+            
         }
+        WarnMsg("ARITH END!");
         break;
     }
 
     case GOTO_IR: { //转移控制指令
-        //将寄存器刷回内存 ?
+        //将寄存器刷回内存
         Var h = FuncList;		
 		while(h != NULL) {
 			if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
@@ -411,7 +438,8 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         Var h = FuncList;		
 		while(h != NULL) {
 			if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
-                flushReg(h);
+                fprintf(fileop,"subu $v1, $fp, %d\n",h->offset);
+				fprintf(fileop,"sw $%s ,0($v1)\n",myReg[h->isUsingReg].name);	//fp偏移量计算
             }
             h = h->next;
         }
@@ -419,6 +447,7 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         Operand op_right = Code->code->u.relop.y;
         char * leftname = getNameFromOperand(op_left, Code->code->opKind);
         char * rightname = getNameFromOperand(op_right, Code->code->opKind);
+        
         //中间比较指令
         char comp[5];
         char * RelopType = Code->code->u.relop.relopType;
@@ -440,34 +469,16 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         }
         //打印左边
         printf("leftname:%s,rightname:%s\n",leftname,rightname);
-        char left_toprint[10],right_toprint[10];
-        if(op_left->kind == CONSTANT) {
-            strcpy(left_toprint,NumberToChar(op_left->u.value));
-        } else if(op_left->kind == VARIABLE || op_left->kind == TEMP) {
-            int RegIndex_lf = findReg(leftname);
-            strcpy(left_toprint,"$");
-            strcat(left_toprint,myReg[RegIndex_lf].name);
-        } else if(op_left->kind == ADDRESS) {
-            int RegIndex_lf = findReg(leftname);
-            strcpy(left_toprint,"0($");
-            strcat(left_toprint,myReg[RegIndex_lf].name);
-            strcat(left_toprint,")");
-            //fprintf(fileop,"0($%s), ",myReg[RegIndex_lf].name);
-        } else { assert(0);}
-        //打印右边
-        if(op_right->kind == CONSTANT) {
-            strcpy(right_toprint,NumberToChar(op_right->u.value));
-        } else if(op_right->kind == VARIABLE || op_right->kind == TEMP) {
-            int RegIndex_rt = findReg(rightname);
-            strcpy(right_toprint,"$");
-            strcat(right_toprint,myReg[RegIndex_rt].name);
-        } else if(op_right->kind == ADDRESS) {
-            int RegIndex_rt = findReg(rightname);
-            strcpy(right_toprint,"0($");
-            strcat(right_toprint,myReg[RegIndex_rt].name);
-            strcat(right_toprint,")");
-        } else { assert(0); }
-        fprintf(fileop,"%s %s %s ",comp,left_toprint,right_toprint);
+        int leftIndex = DivByType(leftname,op_left,Code->code->opKind);
+        if(leftIndex == -1) {
+            leftIndex = newArgToNum(op_left);
+        }
+        int rightIndex = DivByType(rightname,op_right,Code->code->opKind);
+        if(rightIndex == -1) {
+            rightIndex = newArgToNum(op_right);
+        }
+
+        fprintf(fileop,"%s $%s, $%s, ",comp,myReg[leftIndex].name,myReg[rightIndex].name);
         fprintf(fileop,"label%d\n",Code->code->u.relop.label);
         WarnMsg("Finish Relop\n");
         break;
@@ -477,8 +488,8 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         WarnMsg("RETURN IR\n");
         //栈管理
         Operand op = Code->code->u.single.op;
-        char* name = getOperand(op,Code->code->kind);
-        int regIndex = DivByType(name,op);
+        char* name = getNameFromOperand(op,Code->code->kind);
+        int regIndex = DivByType(name,op,Code->code->opKind);
 		fprintf(fileop,"subu $sp, $fp, 8\n");
 		fprintf(fileop,"lw $fp, 0($sp)\n");
 		fprintf(fileop,"addi $sp, $sp, 4\n");
@@ -496,14 +507,15 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
     }
 
     case DEC_IR: { 
-        Operand op = Code->code->u.dec.op;
+        WarnMsg("DEC Begin");
+        Operand ope = Code->code->u.dec.op;
         int decSize = Code->code->u.dec.decSize;
-        char* name = getOperand(op,Code->code->opKind);
+        char* name = getName(ope);
         int index = findReg(name);
         //拓展栈的大小
-        fprintf(fileop,"subu $sp, $sp, %d\n",decSize * 4);
+        fprintf(fileop,"subu $sp, $sp, %d\n",decSize);
         //offset需要加 (decsize - 1) * 4
-        global_offset += (decSize - 1) * 4; 
+        fprintf(fileop,"move $%s, $sp\n",myReg[index].name);
         break;
     }
 
@@ -514,12 +526,23 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
 
     case CALL_IR:{ //最复杂
         //开始找参数
+        //首先收回内存，清空寄存器收回内存
+        WarnMsg("CALL IR START");
+        Var h = FuncList;		
+		while(h != NULL) {
+			if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
+                fprintf(fileop,"subu $v1, $fp, %d\n",h->offset);
+				fprintf(fileop,"sw $%s ,0($v1)\n",myReg[h->isUsingReg].name);	//fp偏移量计算
+            }
+            h = h->next;
+        }
         InterCodes Arg = Code->prev;
         int i = 0;
         while (i < ArgCnt && i < 4 && Arg->code->kind == ARG_IR) { //参数
             Operand op = Arg->code->u.single.op;
-            char* name = getOperand(op, Arg->code->opKind);
-            int ArgIndex = DivByType(name,op);
+            char* name = getName(op);
+            printf("%s\n",name);
+            int ArgIndex = DivByType(name,op,Arg->code->opKind);
             if(ArgIndex == -1) { //数字给新的寄存器
                 ArgIndex = newArgToNum(op);
             }
@@ -541,8 +564,8 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
             fprintf(fileop,"subu $sp, %d\n",size);
             while(i < ArgCnt) { 
                 Operand op = Arg->code->u.single.op;
-                char* name = getOperand(op, Arg->code->opKind);
-                int ArgIndex = DivByType(name,op);
+                char* name = getName(op);
+                int ArgIndex = DivByType(name,op,Arg->code->opKind);
                 if(ArgIndex == -1) { //数字给新的寄存器
                     ArgIndex = newArgToNum(op);
                 }
@@ -551,14 +574,19 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
                 Arg = Arg->prev;
             }
         }
-        //首先收回内存，清空寄存器收回内存
-        Var h = FuncList;		
+        //清空寄存器
+                //首先收回内存，清空寄存器收回内存
+        h = FuncList;		
 		while(h != NULL) {
 			if(h->isUsingReg >= 8 && h->isUsingReg <= 25) {
-                flushReg(h);
+                myReg[h->isUsingReg].varialbe = NULL;
+                myReg[h->isUsingReg].LastUsedTime = 0;
+                myReg[h->isUsingReg].isVaiable = true;
+                h->isUsingReg = -1;
             }
             h = h->next;
         }
+
         ArgCnt = 0; //清空参数
         Operand x = Code->code->u.single.op;
         fprintf(fileop,"jal %s\n",Code->code->u.single.funcName); //跳转函数
@@ -569,8 +597,8 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         //返回值赋值
         if(x != NULL) {
             WarnMsg("x := CALL f");
-            char* n = getOperand(x,Code->code->opKind);
-            int RegIndex = DivByType(n,x);
+            char* n = getNameFromOperand(x,Code->code->opKind);
+            int RegIndex = DivByType(n,x,Code->code->opKind);
             assert(RegIndex != -1);
             fprintf(fileop,"move $%s, $v0\n",myReg[RegIndex].name);
         }
@@ -588,17 +616,22 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         fprintf(fileop,"lw $ra, 0($sp)\n"); 
         fprintf(fileop,"addi $sp, $sp, 4\n"); 
         //调用之后结果存放在 v0中
-        char* name = getOperand(Code->code->u.single.op,Code->code->opKind);
-        int RegIndex = findReg(name); //寻找寄存器
+        char* name = getNameFromOperand(Code->code->u.single.op,Code->code->opKind);
+        int RegIndex = DivByType(name,Code->code->u.single.op,Code->code->opKind); //寻找寄存器
+        assert(RegIndex != -1);
         fprintf(fileop,"move $%s, $v0\n",myReg[RegIndex].name); 
         break;  
     }
 
     case WRITE_IR: { //写寄存器
         Operand op = Code->code->u.single.op;
-        char* name = getOperand(op,Code->code->opKind);
-        int RegIndex = DivByType(name,op);
-        fprintf(fileop,"move $a0, $%s\n",myReg[RegIndex].name);
+        char* name = getNameFromOperand(op,Code->code->opKind);
+        int RegIndex = DivByType(name,op,Code->code->opKind);
+        if(RegIndex == -1) {
+            fprintf(fileop,"li $a0, %d\n",op->u.value);
+        } else {
+            fprintf(fileop,"move $a0, $%s\n",myReg[RegIndex].name);
+        }
         fprintf(fileop,"addi $sp, $sp, -4\n");
         fprintf(fileop,"sw $ra, 0($sp)\n"); 
         fprintf(fileop,"jal write\n"); 
@@ -617,22 +650,26 @@ char* NumberToChar(int value) {
     char* t = malloc(sizeof(char) * 32);
     sprintf(t,"%d",value);
     return t;
-} 
+}
 
-int DivByType(char* name,Operand op) {
+int DivByType(char* name,Operand op,int opkind) {
     if(op->kind == CONSTANT) {
         return -1;              
-    } else if(op->kind == VARIABLE || op->kind == TEMP) {
+    } else if(op->isAddr == false) {
         int index = findReg(name);
         return index; 
-    } else if(op->kind == ADDRESS) {
+    } else if(op->isAddr == true) {
         ADDRcount++;
         int TempIndex = findReg(name); //获得地址值
         char temp[32];
         strcpy(temp,"ADDR_");
         strcat(temp,NumberToChar(ADDRcount));
         int DestReg = findReg(temp);   //获得下一个寄存器，移动
-        fprintf(fileop,"move $%s, 0($%s)\n",myReg[DestReg].name, myReg[TempIndex].name);
+        if(opkind == VAL_OP) {
+            fprintf(fileop,"lw $%s, 0($%s)\n",myReg[DestReg].name, myReg[TempIndex].name);
+        } else {
+            fprintf(fileop,"move $%s, $%s\n",myReg[DestReg].name, myReg[TempIndex].name);
+        }
         return DestReg; //返回地址得值
     }
 }
@@ -644,6 +681,6 @@ int newArgToNum(Operand op) { //给数字，数字首先加载到寄存器中
     strcpy(temp,"NUMB_");
     strcat(temp,NumberToChar(NumberCount));
     int DestReg = findReg(temp);   //获得下一个寄存器，移动
-    fprintf(fileop,"lw $%s, %d\n",myReg[DestReg].name, op->u.value);
+    fprintf(fileop,"li $%s, %d\n",myReg[DestReg].name, op->u.value);
     return DestReg; //返回地址得值
 }

@@ -27,68 +27,59 @@ sw $ra, 0($sp)
 subu $sp, $sp, 4
 sw $fp, 0($sp)
 addi $fp, $sp, 8
-subu $sp, $sp, 228
-addi $sp, $sp, -4
-sw $ra, 0($sp)
-jal read
-lw $ra, 0($sp)
-addi $sp, $sp, 4
-move $t0, $v0
-move $t1, $t0
-subu $v1, $fp, 12
-sw $t0 ,0($v1)
-subu $v1, $fp, 16
-sw $t1 ,0($v1)
-li $t2, 0
-bgt $t1, $t2, label0
-subu $v0, $fp, 12
-sw $t0, 0($v0)
-subu $v0, $fp, 16
-sw $t1, 0($v0)
-subu $v0, $fp, 20
-sw $t2, 0($v0)
-j label1
-label0:
-li $a0, 1
+subu $sp, $sp, 300
+li  $t0, 3
+li  $t1, 12
+mul $t2, $t1, $t1
+addi $t3, $t2, 13
+move $t4, $t3
+li $t6, 13
+div $t4, $t6
+mflo $t5
+addi $t7, $t5, 1
+move $t8, $t7
+div $t1, $t4
+mflo $t9
+mul $s0, $t4, $t8
+add $s1, $t9, $s0
+move $s2, $s1
+move $a0, $s2
 addi $sp, $sp, -4
 sw $ra, 0($sp)
 jal write
 lw $ra, 0($sp)
 addi $sp, $sp, 4
-j label2
-label1:
-subu $v0, $fp, 16
-lw $t0, 0($v0)
-li $t1, 0
-blt $t0, $t1, label3
-subu $v0, $fp, 16
-sw $t0, 0($v0)
+li $s4, 2
+mul $s3, $s2, $s4
+add $s5, $t0, $s3
+move $s6, $s5
+move $a0, $s6
+addi $sp, $sp, -4
+sw $ra, 0($sp)
+jal write
+lw $ra, 0($sp)
+addi $sp, $sp, 4
+add $s7, $t1, $t4
+subu $v0, $fp, 20
+sw $t2, 0($v0)
+add $t2, $s7, $t8
 subu $v0, $fp, 24
-sw $t1, 0($v0)
-j label4
-label3:
-li $t1, 0
-addi $t0, $t1, -1
+sw $t3, 0($v0)
+div $t1, $s6
+mflo $t3
+subu $v0, $fp, 36
+sw $t6, 0($v0)
+add $t6, $t2, $t3
+subu $v0, $fp, 32
+sw $t5, 0($v0)
+add $t5, $t6, $t0
+move $t0, $t5
 move $a0, $t0
 addi $sp, $sp, -4
 sw $ra, 0($sp)
 jal write
 lw $ra, 0($sp)
 addi $sp, $sp, 4
-subu $v0, $fp, 28
-sw $t0, 0($v0)
-subu $v0, $fp, 32
-sw $t1, 0($v0)
-j label5
-label4:
-li $a0, 0
-addi $sp, $sp, -4
-sw $ra, 0($sp)
-jal write
-lw $ra, 0($sp)
-addi $sp, $sp, 4
-label5:
-label2:
 subu $sp, $fp, 8
 lw $fp, 0($sp)
 addi $sp, $sp, 4

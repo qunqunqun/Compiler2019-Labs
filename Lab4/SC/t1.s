@@ -20,6 +20,7 @@ syscall
 move $v0, $0
 jr $ra
 
+
 main:
 subu $sp, $sp, 4
 sw $ra, 0($sp)
@@ -52,7 +53,7 @@ subu $v0, $fp, 20
 lw $t0, 0($v0)
 subu $v0, $fp, 28
 lw $t1, 0($v0)
-blt $t0 $t1 label1
+blt $t0, $t1, label1
 subu $v0, $fp, 20
 sw $t0, 0($v0)
 subu $v0, $fp, 28

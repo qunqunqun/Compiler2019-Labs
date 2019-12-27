@@ -36,8 +36,9 @@ void flushReg(Var t);           //将寄存器刷回
 void wrtieInitCode();           //初始化必要的文件头
 void TranslateInterCode(InterCodes code);   //转换一条语句
 char* NumberToChar(int value);
-int DivByType(char* name,Operand op);
+int DivByType(char* name,Operand op,int opkind);
 int newArgToNum(Operand op);
+void refreshReg();
 //主函数
 void objectCode(InterCodes codes);
 
