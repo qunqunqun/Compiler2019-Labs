@@ -17,7 +17,7 @@ int isPrint = false;
 void printSymbolList(){
     printf("Check The Number of Symbol:%d\n",global_Symbol_Index);
     for(int i = 0; i <= global_Symbol_Index; i++) {
-        printf("Symbol name:%s,type:%d\n",symbol_List[i]->name,symbol_List[i]->kind);
+        printf("Symbol name:%s,type:%d\n",symbol_List[i]->name,symbol_List[i]->u.var->kind);
     }
 }
 
@@ -135,7 +135,7 @@ SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插
     printPhase("Handle_VarDec() Start");
     printProduction(root);
     SymbolElem res = NULL;
-    if (root->nChild == 4) { // VarDec ->VarDec LB INT RB 数组
+    if (root->nChild == 4) { // VarDec -> VarDec LB INT RB 数组
         Type newType = malloc(sizeof(Typesize)); 
         newType->kind = ARRAY;
         newType->u.array.elem = type;
@@ -150,7 +150,8 @@ SymbolElem Handle_VarDec(GramTree* root, Type type) { //处理varDec不进行插
         res->u.var = type;
         res->kind = VAR_ELEMENT;    
         res->lineNo = root->lineNo;
-        //printf("DEC:%s %s\n",root->child[0]->tag, root->child[0]->val.str);
+        // printf("DEC:%s %s\n",root->child[0]->tag, root->child[0]->val.str);
+        // printf("TYPE kind:%d\n",type->kind);
         strcpy(res->name, root->child[0]->val.str); //复制名字
     }
     myPrintf("res= %s\n",res->name);
@@ -454,7 +455,7 @@ FieldList Handle_VarList(GramTree* root){
         SymbolElem symbol = Handle_VarDec(Paramdec->child[1],type);
         insert_Symbol_Table(symbol);
         FieldList var = malloc(sizeof(FieldListsize));
-        var->type = type;
+        var->type = symbol->u.var;
         char *s1 = malloc(sizeof(symbol->name));
         strcpy(s1,symbol->name);
         var->name = s1;
@@ -532,7 +533,7 @@ void CheckLeftAssign(GramTree* root){ //check exp if left assign
 
 int isFiledListEqual(FieldList a, FieldList b){
     while(a != NULL && b != NULL){
-        printf("name:%s,%s\n",a->name,b->name);
+        //printf("name:%s,%s\n",a->name,b->name);
         if(isTypeEqual(a->type, b->type) == false) {
             return false;
         } else {
@@ -548,6 +549,7 @@ int isFiledListEqual(FieldList a, FieldList b){
 }
 
 int isTypeEqual(Type a, Type b){    //decide if Type is Equal
+    //printf("type:%d,%d\n",a->kind,b->kind);
     if(a == NULL || b == NULL){    
         return false;
     }
@@ -623,7 +625,9 @@ Type Handle_Exp(GramTree* root){
             tRoot->typeIndex = insert_Type_List(res);
             //printf("cha zhuang 0\n");
             root->symIndex = symbol->symIndex;
-            //printf("cha zhuang 0\n");
+            // if(isEqual(root->val.str,"op") == true) {
+            //     printf("res:%d\n",res->kind); 
+            // }
             return res;
         }
         // | INT
@@ -812,6 +816,7 @@ Type Handle_Exp(GramTree* root){
                 printErrorOfSemantic(11, root->child[0]->lineNo, root->child[0]->val.str);
                 return NULL;
             }
+            
             FieldList funcField = t->u.func.varList;
             FieldList fieldFromArgs = Handle_Args(root->child[2]);
             if(isFiledListEqual(funcField, fieldFromArgs) == false) {
@@ -827,6 +832,7 @@ Type Handle_Exp(GramTree* root){
                 &&isEqual(root->child[2]->tag,"Exp")
                 &&isEqual(root->child[3]->tag,"RB")){
             Type ta = Handle_Exp(root->child[0]);
+            //ta->kind = ARRAY;
             if(ta == NULL){
                 printErrorOfSemantic(10, root->child[0]->lineNo,root->child[0]->child[0]->val.str);
                 return NULL;
