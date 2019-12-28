@@ -65,34 +65,29 @@ test:
 	
 
 addtionTest:
-	# ./parser ../Test/A_1.cmm
-	# ./parser ../Test/A_2.cmm
-	# ./parser ../Test/A_3.cmm
-	# ./parser ../Test/A_4.cmm
-	# ./parser ../Test/A_5.cmm
-	# ./parser ../Test/A_6.cmm
-	# ./parser ../Test/A_7.cmm
-	# ./parser ../Test/A_8.cmm
-	# ./parser ../Test/A_9.cmm
-	# ./parser ../Test/A_10.cmm 
-	# ./parser ../Test/A_11.cmm
-	# ./parser ../Test/A_12.cmm
-	# ./parser ../Test/A_13.cmm
-	# ./parser ../Test/A_14.cmm
-	# ./parser ../Test/A_15.cmm
-	# ./parser ../Test/A_16.cmm
-	# ./parser ../Test/A_17.cmm
-	# ./parser ../Test/A_18.cmm
-	# ./parser ../Test/A_19.cmm
-	# ./parser ../Test/A_20.cmm
-	# ./parser ../Test/B_1.cmm
-	# ./parser ../Test/B_2.cmm	
-	# ./parser ../Test/C_1.cmm
-	# ./parser ../Test/C_2.cmm	
-	# ./parser ../Test/D_1.cmm
-	# ./parser ../Test/D_2.cmm	
-	# ./parser ../Test/D_3.cmm	
-	# ./parser ../Test/E_2.cmm	
+	./../parser ../Test/t1.cmm 	../IR/t1.ir ../SC/t1.s	
+	./../parser ../Test/t2.cmm 	../IR/t2.ir ../SC/t2.s
+	./../parser ../Test/test1.cmm 	../IR/test1.ir ../SC/test1.s	
+	./../parser ../Test/test2.cmm 	../IR/test2.ir ../SC/test2.s
+	./../parser ../Test/test3.cmm 	../IR/test3.ir ../SC/test3.s	
+	./../parser ../Test/test4.cmm 	../IR/test4.ir ../SC/test4.s
+	./../parser ../Test/A_1.cmm 	../IR/A_1.ir ../SC/A_1.s
+	./../parser ../Test/A_2.cmm 	../IR/A_2.ir ../SC/A_2.s
+	./../parser ../Test/A_3.cmm 	../IR/A_3.ir ../SC/A_3.s
+	./../parser ../Test/A_4.cmm 	../IR/A_4.ir ../SC/A_4.s
+	./../parser ../Test/B_1.cmm 	../IR/B_1.ir ../SC/B_1.s
+	./../parser ../Test/B_2.cmm 	../IR/B_2.ir ../SC/B_2.s
+	./../parser ../Test/B_3.cmm 	../IR/B_3.ir ../SC/B_3.s
+	./../parser ../Test/C_1.cmm 	../IR/C_1.ir ../SC/C_1.s
+	./../parser ../Test/C_2.cmm 	../IR/C_2.ir ../SC/C_2.s
+	./../parser ../Test/D_1.cmm 	../IR/D_1.ir ../SC/D_1.s
+	./../parser ../Test/E_11.cmm 	../IR/E_11.ir ../SC/E_11.s
+	./../parser ../Test/E_12.cmm 	../IR/E_12.ir ../SC/E_12.s
+	./../parser ../Test/E_13.cmm 	../IR/E_13.ir ../SC/E_13.s
+	./../parser ../Test/E_21.cmm 	../IR/E_21.ir ../SC/E_21.s	
+	./../parser ../Test/E_22.cmm 	../IR/E_22.ir ../SC/E_22.s
+	./../parser ../Test/E_23.cmm 	../IR/E_23.ir ../SC/E_23.s
+	./../parser ../Test/O_1.cmm 	../IR/O_1.ir ../SC/O_1.s
 
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output

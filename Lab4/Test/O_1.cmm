@@ -1,0 +1,18 @@
+struct A {
+    int num;
+    int op;
+};
+
+int myadd(int a,int b,int c,int d, struct A f) {
+    return a + b + c + d + f.num + f.op;
+}
+
+int main() {
+    struct A a;
+    int t;
+    a.num = 1;
+    a.op = 2;
+    t = myadd(1,1,1,1,a);
+    write(t);
+    return 0;
+}

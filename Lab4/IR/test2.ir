@@ -12,7 +12,6 @@ t0 := CALL fact
 t3 := v0 * t0
 RETURN t3
 LABEL label2 :
-
 FUNCTION main :
 READ t4
 v1 := t4

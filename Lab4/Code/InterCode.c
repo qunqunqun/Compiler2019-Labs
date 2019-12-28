@@ -3,7 +3,7 @@
 int globalLabelIndex = -1;
 int globalTempIndex = -1;
 
-int is_iPrint = true;
+int is_iPrint = false;
 //工具人函数
 void iPrintPhase(char * msg){
     //return;
@@ -40,7 +40,7 @@ InterCodes translateTree(GramTree * root){
     iPrintPhase("translateTree Begin");
     iPrintProduction(root);
     InterCodes codes = translate_Program(root);
-    printInterCodes(codes);
+    //printInterCodes(codes);
     outputCodeFile(codes);
     return codes;
 }
@@ -262,7 +262,7 @@ InterCodes translate_Exp(GramTree* root, Operand* place){
         root = root->child[0];
         // | ID
         if(isEqual(root->tag,"ID")){
-            printf("ID:%s, root->symIndex = %d\n",root->val.str,root->symIndex);
+            //printf("ID:%s, root->symIndex = %d\n",root->val.str,root->symIndex);
             SymbolElem symbol = findFromList(root->symIndex);
             int isAddr = false;
             if(symbol->u.var->kind != BASIC && symbol->isParam == true){

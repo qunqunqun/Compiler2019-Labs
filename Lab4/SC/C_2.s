@@ -35,7 +35,7 @@ li  $t3, 0
 li  $t4, 0
 li  $t5, 12
 li  $t6, 0
-subu $sp, $sp, 192
+subu $sp, $sp, 48
 move $t7, $sp
 subu $v0, $fp, 12
 sw $t0, 0($v0)
@@ -611,9 +611,9 @@ sw $fp, 0($sp)
 addi $fp, $sp, 8
 subu $sp, $sp, 48
 jal trap
-move $t3, $v0
-move $t4, $t3
-move $a0, $t4
+move $t0, $v0
+move $t1, $t0
+move $a0, $t1
 addi $sp, $sp, -4
 sw $ra, 0($sp)
 jal write

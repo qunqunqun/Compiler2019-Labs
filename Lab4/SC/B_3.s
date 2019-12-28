@@ -29,7 +29,7 @@ sw $fp, 0($sp)
 addi $fp, $sp, 8
 subu $sp, $sp, 1044
 move $t0, $a0
-subu $sp, $sp, 80
+subu $sp, $sp, 20
 move $t1, $sp
 li  $t2, 0
 subu $v0, $fp, 12

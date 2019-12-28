@@ -532,6 +532,7 @@ void CheckLeftAssign(GramTree* root){ //check exp if left assign
 
 int isFiledListEqual(FieldList a, FieldList b){
     while(a != NULL && b != NULL){
+        printf("name:%s,%s\n",a->name,b->name);
         if(isTypeEqual(a->type, b->type) == false) {
             return false;
         } else {

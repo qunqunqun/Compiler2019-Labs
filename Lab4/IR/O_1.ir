@@ -1,0 +1,29 @@
+FUNCTION myadd :
+PARAM v2
+PARAM v3
+PARAM v4
+PARAM v5
+PARAM v6
+t0 := v2 + v3
+t1 := t0 + v4
+t2 := t1 + v5
+t3 := v6 + #0
+t4 := t2 + *t3
+t5 := v6 + #4
+t6 := t4 + *t5
+RETURN t6
+FUNCTION main :
+DEC *v7 8
+t7 := &v7 + #0
+*t7 := #1
+t8 := &v7 + #4
+*t8 := #2
+ARG &v7
+ARG #1
+ARG #1
+ARG #1
+ARG #1
+t9 := CALL myadd
+v8 := t9
+WRITE v8
+RETURN #0

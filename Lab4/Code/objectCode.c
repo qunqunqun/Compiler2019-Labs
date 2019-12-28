@@ -2,7 +2,7 @@
 
 FILE* fileop;
 
-int is_iPrint_lab4 = true; //用于打印lab4
+int is_iPrint_lab4 = false; //用于打印lab4
 int CurTime = 0;            //用于寄存器分配，时间最早的寄存器算法
 int global_offset = 0;             //用于确定在内存中的位置
 Reg myReg[MAX_REGNUM];      //regNUM
@@ -118,7 +118,7 @@ char * getNameFromOperand(Operand op,int opKind) {
 }
 
 int getReg() {
-    printf("Start find Reg!\n");
+    //printf("Start find Reg!\n");
     for(int i = 8; i <= 25; i++) {
         if(myReg[i].isVaiable == true) {
             return i;
@@ -148,11 +148,11 @@ int getReg() {
 
 //查看变量是否在寄存器中，不在则分配寄存器
 int findReg(char *name) {
-    printf("find %s is in Reg\n",name);
+    //printf("find %s is in Reg\n",name);
     //判断在不在函数列表参数内
     Var h = FuncList;
     while (h != NULL) {
-        printf("temp %s,%d\n",h->name,h->isUsingReg);
+        //printf("temp %s,%d\n",h->name,h->isUsingReg);
         if(isEqual(h->name,name) == true) {
             break;
         }
@@ -162,7 +162,7 @@ int findReg(char *name) {
     if(h == NULL) //不在函数参数中
     {
         flag = 1;
-        printf("SIZE:%ld",sizeof(VarSize));
+        //printf("SIZE:%ld",sizeof(VarSize));
         h = malloc(sizeof(VarSize));
         strcpy(h->name,name);
         h->isUsingReg = -1; 
@@ -173,7 +173,7 @@ int findReg(char *name) {
     }
     //开始使用分配寄存器
     if(h->isUsingReg == -1) {
-        printf("!!!!?\n");
+        //printf("!!!!?\n");
         int regNum = getReg(); //找寻可用的寄存器
         h->isUsingReg = regNum;
         myReg[regNum].varialbe = h; 
@@ -223,7 +223,7 @@ void objectCode(InterCodes codes){
     //初始化先写入固定的code
     wrtieInitCode();
     //逐条翻译各语句
-    printf("\nCurTime:%d\n",CurTime);
+    //printf("\nCurTime:%d\n",CurTime);
     InterCodes tempcode = codes;
     CurCode = tempcode;
     TranslateInterCode(tempcode);
@@ -231,7 +231,7 @@ void objectCode(InterCodes codes){
     while (tempcode != codes)
     {
         CurTime += 1; //时间加一
-        printf("\nCurTime:%d\n",CurTime);
+        //printf("\nCurTime:%d\n",CurTime);
         CurCode = tempcode;
         TranslateInterCode(tempcode); 
         tempcode = tempcode->next;
@@ -241,7 +241,7 @@ void objectCode(InterCodes codes){
 
 void TranslateInterCode(InterCodes Code) { //转化一条语句
     int codekind = Code->code->kind;
-    printf("codekind:%d\n",codekind);
+    //printf("codekind:%d\n",codekind);
     switch (codekind) {
     case LABLE_IR:{ 
         //将寄存器刷回内存 ?
@@ -272,7 +272,7 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
 		fprintf(fileop,"addi $fp, $sp, 8\n");
         //栈的预分配空间，除了数组和Struct需要额外分配空间
         int t = ConutOfInterCode(Code);
-        printf("this func's number code:%d\n",t);
+        //printf("this func's number code:%d\n",t);
         int size = t * 4 * 3;
         fprintf(fileop,"subu $sp, $sp, %d\n",size);
         //进行处理参数
@@ -282,7 +282,7 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
             WarnMsg("PARAM_IR\n");
             Operand op = pa->code->u.single.op;
             char* name = getName(op);
-            printf("!!!%s,%d,%d\n",name,pa->code->opKind,op->kind);
+            //printf("!!!%s,%d,%d\n",name,pa->code->opKind,op->kind);
             int ArgIndex = findReg(name);
             if(ArgCount == 0) {
                 fprintf(fileop,"move $%s, $a0\n",myReg[ArgIndex].name);
@@ -312,11 +312,11 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         Operand right = Code->code->u.assign.right; //获取右边
         char *leftname = getNameFromOperand(left,Code->code->opKind); 
         char *rightname = getNameFromOperand(right,Code->code->opKind);
-        printf("assign Leftname:%s, rightName:%s\n",leftname,rightname);
+        //printf("assign Leftname:%s, rightName:%s\n",leftname,rightname);
         int RegIndex_Left = findReg(leftname); //对左式进行寄存器的分配,特殊处理地址
         if(left->isAddr == false) {
             if(right->kind == CONSTANT) { //常数
-                printf("leftRegNum = %d\n",RegIndex_Left);
+                //printf("leftRegNum = %d\n",RegIndex_Left);
                 fprintf(fileop,"li  $%s, %d\n", myReg[RegIndex_Left].name, right->u.value);
             } else if(right->isAddr == false) { //地址
                 int RegIndex_Right = findReg(rightname);
@@ -329,7 +329,7 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
             }
         } else if(left->isAddr == true) { //地址
             if(right->kind == CONSTANT) { 
-                printf("leftRegNum = %d\n",RegIndex_Left);
+                //printf("leftRegNum = %d\n",RegIndex_Left);
                 int RegIndex_Right= newArgToNum(right);
                 fprintf(fileop,"sw $%s, 0($%s)\n", myReg[RegIndex_Right].name, myReg[RegIndex_Left].name);
             } else if(right->isAddr == false) { //地址
@@ -367,7 +367,7 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
             strcat(temp,"i");
         }
         WarnMsg("please test if i can be appended!");
-        printf("temp:%s\n",temp);
+        //printf("temp:%s\n",temp);
         if(op_right->kind == CONSTANT && isEqual(temp,"subi") == true) { //改变一下特殊处理
             isNeg = true;   
             strcpy(temp,"addi");
@@ -376,13 +376,13 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         char* result_name = getNameFromOperand(op_result,Code->code->kind);
         char* left_name = getNameFromOperand(op_left,Code->code->kind);
         char* right_name = getNameFromOperand(op_right,Code->code->kind);
-        printf("res:%s,left:%s,right:%s\n",result_name,left_name,right_name);
+        //printf("res:%s,left:%s,right:%s\n",result_name,left_name,right_name);
         int reg_left,reg_right,reg_result;
         //首先判断结果寄存器
         reg_result = findReg(result_name);
         if(reg_result == -1) { assert(0); }
         //左边结果寄存器
-        printf("!!!\n");
+        //printf("!!!\n");
         reg_left = DivByType(left_name,op_left,Code->code->opKind);
         //右边结果寄存器
         reg_right = DivByType(right_name,op_right,Code->code->opKind);
@@ -464,11 +464,11 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         }  else if(isEqual(RelopType,"!=")) {
             strcpy(comp,"bne");
         }  else {
-            printf("Relop type:%s\n",RelopType);
+            //printf("Relop type:%s\n",RelopType);
             assert(0);
         }
         //打印左边
-        printf("leftname:%s,rightname:%s\n",leftname,rightname);
+        //printf("leftname:%s,rightname:%s\n",leftname,rightname);
         int leftIndex = DivByType(leftname,op_left,Code->code->opKind);
         if(leftIndex == -1) {
             leftIndex = newArgToNum(op_left);
@@ -541,7 +541,7 @@ void TranslateInterCode(InterCodes Code) { //转化一条语句
         while (i < ArgCnt && i < 4 && Arg->code->kind == ARG_IR) { //参数
             Operand op = Arg->code->u.single.op;
             char* name = getName(op);
-            printf("%s\n",name);
+            //printf("%s\n",name);
             int ArgIndex = DivByType(name,op,Arg->code->opKind);
             if(ArgIndex == -1) { //数字给新的寄存器
                 ArgIndex = newArgToNum(op);

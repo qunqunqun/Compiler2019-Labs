@@ -28,13 +28,13 @@ subu $sp, $sp, 4
 sw $fp, 0($sp)
 addi $fp, $sp, 8
 subu $sp, $sp, 2412
-subu $sp, $sp, 128
+subu $sp, $sp, 32
 move $t0, $sp
-subu $sp, $sp, 128
+subu $sp, $sp, 32
 move $t1, $sp
-subu $sp, $sp, 128
+subu $sp, $sp, 32
 move $t2, $sp
-subu $sp, $sp, 128
+subu $sp, $sp, 32
 move $t3, $sp
 li  $t4, 0
 li  $t5, 0

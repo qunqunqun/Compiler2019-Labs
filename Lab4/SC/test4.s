@@ -21,7 +21,7 @@ move $v0, $0
 jr $ra
 
 
-fadd:
+add:
 subu $sp, $sp, 4
 sw $ra, 0($sp)
 subu $sp, $sp, 4
@@ -57,9 +57,9 @@ subu $sp, $sp, 4
 sw $fp, 0($sp)
 addi $fp, $sp, 8
 subu $sp, $sp, 456
-subu $sp, $sp, 32
+subu $sp, $sp, 8
 move $t0, $sp
-subu $sp, $sp, 32
+subu $sp, $sp, 8
 move $t1, $sp
 li  $t2, 0
 li  $t3, 0
@@ -159,7 +159,7 @@ sw $t9 ,0($v1)
 subu $v0, $fp, 12
 lw $s0, 0($v0)
 move $a0, $s0
-jal fadd
+jal add
 move $t0, $v0
 subu $v0, $fp, 80
 lw $t1, 0($v0)

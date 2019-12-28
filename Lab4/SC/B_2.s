@@ -28,11 +28,11 @@ subu $sp, $sp, 4
 sw $fp, 0($sp)
 addi $fp, $sp, 8
 subu $sp, $sp, 1176
-subu $sp, $sp, 80
+subu $sp, $sp, 20
 move $t0, $sp
-subu $sp, $sp, 160
+subu $sp, $sp, 40
 move $t1, $sp
-subu $sp, $sp, 80
+subu $sp, $sp, 20
 move $t2, $sp
 li  $t3, 0
 subu $v0, $fp, 12
@@ -455,7 +455,7 @@ subu $sp, $sp, 4
 sw $fp, 0($sp)
 addi $fp, $sp, 8
 subu $sp, $sp, 804
-subu $sp, $sp, 80
+subu $sp, $sp, 20
 move $t0, $sp
 li  $t1, 0
 subu $v0, $fp, 12
