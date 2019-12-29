@@ -41,7 +41,7 @@ InterCodes translateTree(GramTree * root){
     iPrintProduction(root);
     InterCodes codes = translate_Program(root);
     //printInterCodes(codes);
-    outputCodeFile(codes);
+    //outputCodeFile(codes);
     return codes;
 }
 

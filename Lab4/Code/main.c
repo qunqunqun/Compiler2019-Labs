@@ -20,8 +20,8 @@ int main(int argc, char ** argv){
 		perror(argv[1]);
 		return 1;
 	}
-	codeFileName =  argv[2]; 	//Lab3 中间代码生成
-	compileFileName =  argv[3]; //Lab4 汇编代码生成
+	//codeFileName =  argv[2]; 	//Lab3 中间代码生成
+	compileFileName =  argv[2]; //Lab4 汇编代码生成
 	//start parse
 	ErrorFlag = 0;
 	yyrestart(f);
