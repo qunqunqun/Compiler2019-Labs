@@ -23,7 +23,7 @@ struct Reg_ {
 struct Var_ {  
     char name[20];
     int isUsingReg; //是否在寄存器中
-    int offset;     //TODO:
+    int offset;     
     Var next;       //数据结构链表结构
 } VarSize;
 
